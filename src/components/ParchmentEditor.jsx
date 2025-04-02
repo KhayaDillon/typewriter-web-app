@@ -8,22 +8,24 @@ export default function ParchmentEditor() {
   const paperRef = useRef(null);
 
   const handleClick = () => {
-    paperRef.current.focus();
+    if (paperRef.current) {
+      paperRef.current.focus();
+    }
   };
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-200">
+    <div className="parchment-container">
       <div 
-        className="relative w-[8.5in] h-[11in] bg-cover bg-center p-8 shadow-lg border border-gray-400 rounded-md"
-        style={{ backgroundImage: `url(${parchmentImg})`
-      }}
+        className="parchment-paper"
+        style={{ backgroundImage: `url(${parchmentImg})` }}
         onClick={handleClick}
+        tabIndex="0"  // Allows div to be focusable
       >
         <textarea
           ref={paperRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          className="w-full h-full bg-transparent resize-none focus:outline-none text-lg font-serif"
+          className="parchment-textarea"
           placeholder="Start writing..."
         />
       </div>

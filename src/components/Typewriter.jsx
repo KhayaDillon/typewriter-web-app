@@ -1,20 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import TypewriterEffect from "./TypewriterEffect";
+import TypewriterSounds from "./TypewriterSounds";
 
-const Typewriter = ({ text, speed = 100 }) => {
-  const [displayedText, setDisplayedText] = useState("");
-  const [index, setIndex] = useState(0);
+export default function Typewriter() {
+  const [text, setText] = useState("");
 
-  useEffect(() => {
-    if (index < text.length) {
-      const timeout = setTimeout(() => {
-        setDisplayedText((prev) => prev + text[index]);
-        setIndex((prev) => prev + 1);
-      }, speed);
-      return () => clearTimeout(timeout);
-    }
-  }, [index, text, speed]);
+  const handleKeyPress = (event) => {
+    setText((prev) => prev + event.key);
+  };
 
-  return <h1>{displayedText}</h1>;
-};
-
-export default Typewriter;
+  return (
+    <div className="typewriter-container" onKeyDown={handleKeyPress} tabIndex={0}>
+      <TypewriterEffect text={text} />
+      <TypewriterSounds text={text} />
+    </div>
+  );
+}
