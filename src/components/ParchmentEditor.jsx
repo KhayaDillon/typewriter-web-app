@@ -1,10 +1,8 @@
-import { useState, useRef } from "react";
+import { useRef } from "react";
 import parchmentImg from "../assets/parchment.png";
 import "../App.css";
 
-
-export default function ParchmentEditor() {
-  const [text, setText] = useState("");
+export default function ParchmentEditor({ text, setText }) {
   const paperRef = useRef(null);
 
   const handleClick = () => {
@@ -15,11 +13,11 @@ export default function ParchmentEditor() {
 
   return (
     <div className="parchment-container">
-      <div 
+      <div
         className="parchment-paper"
         style={{ backgroundImage: `url(${parchmentImg})` }}
         onClick={handleClick}
-        tabIndex="0"  // Allows div to be focusable
+        tabIndex="0"
       >
         <textarea
           ref={paperRef}

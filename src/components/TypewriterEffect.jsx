@@ -1,29 +1,25 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
 export default function TypewriterEffect({ text, setText }) {
-  const textRef = useRef(null);
-
   useEffect(() => {
-    if (textRef.current) {
-      textRef.current.scrollTop = textRef.current.scrollHeight;
-    }
-  }, [text]);
+    const handleKeyDown = (e) => {
+      // Ignore special control keys
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
       e.preventDefault();
-      setText((prev) => prev + "\n");
-    }
-  };
 
-  return (
-    <textarea
-      ref={textRef}
-      value={text}
-      onChange={(e) => setText(e.target.value)}
-      onKeyDown={handleKeyDown}
-      className="w-full h-full bg-transparent resize-none focus:outline-none text-lg font-serif"
-      placeholder="Start typing..."
-    />
-  );
+      if (e.key === "Backspace") {
+        setText((prev) => prev.slice(0, -1));
+      } else if (e.key === "Enter") {
+        setText((prev) => prev + "\n");
+      } else if (e.key.length === 1) {
+        setText((prev) => prev + e.key);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [setText]);
+
+  return null; // Logic only
 }
