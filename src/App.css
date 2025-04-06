@@ -13,8 +13,8 @@
 
 /* Style for the parchment background */
 .parchment-paper {
-  width: 680px; 
-  height: 880px; 
+  width: 600px; 
+  height: 800px; 
   background-size: cover;
   background-position: center;
   padding: 1.5rem;
@@ -22,6 +22,8 @@
   border: 1px solid #aaa;
   border-radius: 5px;
   position: relative;
+  z-index: 2; /* Above typewriter */
+  margin-bottom: -60px; /* Overlap typewriter */
   transform: translateY(25%); /* Move paper lower */
 }
 
@@ -45,4 +47,19 @@
   word-wrap: break-word; /* Prevent overflow */
   padding-bottom: 1rem; /* Ensure extra spacing at the bottom */
   box-sizing: border-box; /* Make padding part of the element’s size */
+}
+
+
+.typewriter-stack {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.typewriter-image {
+  width: 1200px; /* Slightly wider than the parchment */
+  z-index: 2; /* Ensure it is above the parchment */
+  position: relative;
+  transform: translateY(-20px); /* Fine-tune vertical placement */
 }
