@@ -1,65 +1,86 @@
-/* Parchment Editor*/
+/* Parchment Editor */
 
 /* Ensure the parent container centers the parchment */
 .parchment-container {
   display: flex;
   justify-content: center;
-  align-items: start; /* Align from top */
+  align-items: start;
   height: 100vh;
-  width: 100vw; /* Ensure full width */
-  background-color: #e5e5e5; /* Light gray background */
-  padding-top: 5vh; /* Optional fine-tuning */
+  width: 100vw;
+  background-color: #e5e5e5;
+  padding-top: 5vh;
+  overflow: hidden; /* Prevent any scroll */
 }
 
 /* Style for the parchment background */
 .parchment-paper {
-  width: 600px; 
-  height: 800px; 
+  width: 720px;  /* Was 600px */
+  height: 960px; /* Was 800px */
   background-size: cover;
   background-position: center;
   padding: 1.5rem;
   box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2);
   border: 1px solid #aaa;
   border-radius: 5px;
+  z-index: 2;
+  transform: translateY(400px);
   position: relative;
-  z-index: 2; /* Above typewriter */
-  margin-bottom: -60px; /* Overlap typewriter */
-  transform: translateY(25%); /* Move paper lower */
 }
 
-
-/* Textarea to make it transparent and feel like handwriting */
+/* Textarea */
 .parchment-textarea {
   width: 100%;
   height: 100%;
-  background: transparent;  /* Transparent background */
+  background: transparent;
   border: none;
   resize: none;
   outline: none;
   font-size: 18px;
   font-family: "Cursive", "Georgia", serif;
   line-height: 1.4;
-  color: #5a3e1b; /* Dark brown ink color */
+  color: #5a3e1b;
   padding: 1rem;
-  caret-color: black; /* Ensure blinking cursor is visible */
-  overflow: hidden; /* Prevent scrolling */
-  white-space: pre-wrap; /* Keep line breaks */
-  word-wrap: break-word; /* Prevent overflow */
-  padding-bottom: 1rem; /* Ensure extra spacing at the bottom */
-  box-sizing: border-box; /* Make padding part of the element’s size */
+  caret-color: black;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  padding-bottom: 1rem;
+  box-sizing: border-box;
 }
 
+/* Class for paper and platen */ 
+.paper-track {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: absolute;
+  left: 50%;
+  bottom: 140px; /* Adjust this until the paper sits correctly above the typewriter */
+  transition: transform 0.1s ease-out;
+}
 
+.platen-image {
+  width: 1200px;
+  transform: translateY(1000px);
+  position: relative;
+  z-index: 1;
+  pointer-events: none; /* Prevent it from blocking textarea clicks */
+}
+
+/* Typewriter Layering Stack */
 .typewriter-stack {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-end; /* keep typewriter at the bottom */
+  height: 100%;
 }
 
+/* Typewriter image */
 .typewriter-image {
-  width: 1200px; /* Slightly wider than the parchment */
-  z-index: 2; /* Ensure it is above the parchment */
+  width: 1440px; /* Was 1200px; matches +20% proportion */
+  z-index: 3;
   position: relative;
-  transform: translateY(-20px); /* Fine-tune vertical placement */
+  transform: translateY(-24px); /* Was -20px; scale accordingly */
 }
