@@ -51,6 +51,21 @@
   box-sizing: border-box;
 }
 
+.textarea-mirror {
+  visibility: hidden;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  position: absolute;
+  top: 0;
+  left: -9999px;
+  width: 100%;
+  font-size: 16px;
+  line-height: 1.5;
+  font-family: "Courier", "Courier New", monospace;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
 /* Class for paper and platen */ 
 .paper-track {
   display: flex;

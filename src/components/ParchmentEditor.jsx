@@ -4,7 +4,7 @@ import platenImg from "../assets/platen.png";
 import typewriterImg from "../assets/typewriter.png"; // add this
 import "../App.css";
 
-export default function ParchmentEditor({ text, setText, carriageOffset, paperOffset }) {
+export default function ParchmentEditor({ text, setText, carriageOffset, paperOffset, mirrorRef }) {
   const paperRef = useRef(null);
   const initialOffset = 750;
 
@@ -42,6 +42,14 @@ export default function ParchmentEditor({ text, setText, carriageOffset, paperOf
               className="parchment-textarea"
               placeholder="Start writing..."
             />
+
+            <div
+              ref={mirrorRef}
+              className="textarea-mirror"
+              aria-hidden="true"
+            >
+              {text}
+            </div>
           </div>
         </div>
 

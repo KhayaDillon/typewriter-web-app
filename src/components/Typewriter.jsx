@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import TypewriterEffect from "./TypewriterEffect";
 import TypewriterSounds from "./TypewriterSounds";
 import ParchmentEditor from "./ParchmentEditor";
@@ -8,6 +8,8 @@ export default function Typewriter() {
   const [carriageOffset, setCarriageOffset] = useState(0); // horizontal shift
   const [paperOffset, setPaperOffset] = useState(0);       // vertical shift
 
+  const mirrorRef = useRef(null);
+
   return (
     <div className="typewriter-container">
       <TypewriterEffect 
@@ -15,6 +17,7 @@ export default function Typewriter() {
         setText={setText}  
         setCarriageOffset={setCarriageOffset}
         setPaperOffset={setPaperOffset}
+        mirrorRef={mirrorRef}
       />
       <TypewriterSounds text={text} />
       <ParchmentEditor 
@@ -22,6 +25,7 @@ export default function Typewriter() {
         setText={setText} 
         carriageOffset={carriageOffset}
         paperOffset={paperOffset}
+        mirrorRef={mirrorRef}
       />
     </div>
   );
