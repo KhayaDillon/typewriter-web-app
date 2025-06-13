@@ -14,8 +14,8 @@
 
 /* Style for the parchment background */
 .parchment-paper {
-  width: 720px;  /* Was 600px */
-  height: 960px; /* Was 800px */
+  width: 720px; 
+  height: 932px; 
   background-size: cover;
   background-position: center;
   padding: 1.5rem;
@@ -23,8 +23,8 @@
   border: 1px solid #aaa;
   border-radius: 5px;
   z-index: 2;
-  transform: translateY(400px);
   position: relative;
+  transition: transform 0.2s ease-out;
 }
 
 /* Textarea */
@@ -35,10 +35,13 @@
   border: none;
   resize: none;
   outline: none;
-  font-size: 18px;
-  font-family: "Cursive", "Georgia", serif;
-  line-height: 1.4;
-  color: #5a3e1b;
+  font-size: 16px;
+  font-family: "Courier", "Courier New", monospace;
+  line-height: 1.5;
+  color: #3b2f2f;
+  font-weight: 550;
+  text-shadow: 0 0 1px #1e1e1e;
+  letter-spacing: 0.5px;
   padding: 1rem;
   caret-color: black;
   overflow: hidden;

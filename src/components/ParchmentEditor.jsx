@@ -6,6 +6,8 @@ import "../App.css";
 
 export default function ParchmentEditor({ text, setText, carriageOffset, paperOffset }) {
   const paperRef = useRef(null);
+  const initialOffset = 750;
+
 
   const handleClick = () => {
     if (paperRef.current) {
@@ -27,7 +29,9 @@ export default function ParchmentEditor({ text, setText, carriageOffset, paperOf
           <img src={platenImg} alt="Platen Roller" className="platen-image" />
           <div
             className="parchment-paper"
-            style={{ backgroundImage: `url(${parchmentImg})` }}
+            style={{ backgroundImage: `url(${parchmentImg})`, 
+              transform: `translateY(calc(${initialOffset}px - ${paperOffset}px))`
+            }}
             onClick={handleClick}
             tabIndex="0"
           >
