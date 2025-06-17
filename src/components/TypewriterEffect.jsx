@@ -6,6 +6,7 @@ export default function TypewriterEffect({
   setCarriageOffset,
   setPaperOffset,
   mirrorRef,
+  textareaRef,
 }) {
 
   const offset = useRef(0);
@@ -13,6 +14,7 @@ export default function TypewriterEffect({
   const prevLength = useRef(0);
   const prevText = useRef("");
   const prevLines = useRef(1);
+  const prevNewlineCount = useRef(0);
   
   const justWrapped = useRef(false);
   const didMount = useRef(false);
@@ -44,9 +46,7 @@ export default function TypewriterEffect({
     const mirrorHeight = mirrorRef.current?.offsetHeight ?? 0;
     const lineHeight = 16 * 1.5; // match font-size * line-height
     const currentLineCount = Math.ceil(mirrorHeight / lineHeight);
-
-    console.log("Mirror height:", mirrorHeight);
-    console.log("Line count:", currentLineCount, "Prev:", prevLines.current);
+    const currentNewlineCount = (text.match(/\n/g) || []).length;
 
     // Handle autowrap
     if (currentLineCount > prevLines.current && prevLength.current > 0) {
@@ -63,6 +63,14 @@ export default function TypewriterEffect({
       } else {
         offset.current = Math.min(500, offset.current + 5);
         setCarriageOffset(offset.current);
+
+        // Trigger paper stamp effect
+        if (textareaRef?.current) {
+          const el = textareaRef.current;
+          el.classList.remove("stamp-effect");
+          void el.offsetWidth; // force reflow
+          el.classList.add("stamp-effect");
+        }
       }
     }
   
@@ -72,6 +80,7 @@ export default function TypewriterEffect({
       offset.current = Math.max(0, offset.current - 5);
       setCarriageOffset(offset.current);
     }
+    
 
     // Handle manual newline (Enter), only if not from wrapping
     if (isNewLineAdded && !justWrapped.current) {
@@ -81,11 +90,12 @@ export default function TypewriterEffect({
     }
 
     // Handle removed newline
-    if (isNewLineRemoved) {
-      setPaperOffset((prev) => Math.max(0, prev - 20));
+    if (isNewLineRemoved || currentNewlineCount < prevNewlineCount.current) {
+      setPaperOffset((prev) => Math.max(0, prev - 30));
     }
 
     // Save state
+    prevNewlineCount.current = currentNewlineCount;
     prevLines.current = currentLineCount;
     prevLength.current = text.length;
     prevText.current = text;

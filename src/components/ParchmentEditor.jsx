@@ -4,19 +4,33 @@ import platenImg from "../assets/platen.png";
 import typewriterImg from "../assets/typewriter.png"; // add this
 import "../App.css";
 
-export default function ParchmentEditor({ text, setText, carriageOffset, paperOffset, mirrorRef }) {
-  const paperRef = useRef(null);
+export default function ParchmentEditor({ text, setText, carriageOffset, paperOffset, mirrorRef, textareaRef }) {
+
   const initialOffset = 750;
 
-
   const handleClick = () => {
-    if (paperRef.current) {
-      paperRef.current.focus();
+    if (textareaRef.current) {
+      textareaRef.current.focus();
     }
   };
 
   const handleChange = (e) => {
     setText(e.target.value);
+    console.log("Target value:", e.target.value);
+  };
+
+  const renderTextWithAnimation = (text) => {
+    return [...text].map((char, i) => {
+      const isLast = i === text.length - 1;
+      return (
+        <span
+          key={i}
+          className={isLast ? "animated-char" : undefined}
+        >
+          {char === "\n" ? "\n" : char}
+        </span>
+      );
+    });
   };
 
   return (
@@ -36,7 +50,7 @@ export default function ParchmentEditor({ text, setText, carriageOffset, paperOf
             tabIndex="0"
           >
             <textarea
-              ref={paperRef}
+              ref={textareaRef}
               value={text}
               onChange={handleChange}
               className="parchment-textarea"
@@ -48,7 +62,10 @@ export default function ParchmentEditor({ text, setText, carriageOffset, paperOf
               className="textarea-mirror"
               aria-hidden="true"
             >
-              {text}
+              { text.length > 0 
+                ? renderTextWithAnimation(text) 
+                : <span className="placeholder">Start writing...</span>
+              }
             </div>
           </div>
         </div>
