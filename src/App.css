@@ -47,23 +47,38 @@
   overflow: hidden;
   white-space: pre-wrap;
   word-wrap: break-word;
-  padding-bottom: 1rem;
   box-sizing: border-box;
 }
 
 .textarea-mirror {
-  visibility: hidden;
+  /*
+  visibility: visible;
+  left: 0;
+  */
+
+  visibility: hidden; 
+  left: -9999px; 
+  
+  top: 0;
+  background: #f9f9c550;
+  color: #000;
+  border: 1px dashed #aaa;
+  z-index: 1000;
+  pointer-events: none; 
+  position: absolute;
+  width: 100%;
+  height: auto;
+
   white-space: pre-wrap;
   word-wrap: break-word;
-  position: absolute;
-  top: 0;
-  left: -9999px;
-  width: 100%;
   font-size: 16px;
   line-height: 1.5;
   font-family: "Courier", "Courier New", monospace;
-  padding: 1rem;
+  padding: 2.4rem;
   box-sizing: border-box;
+  font-weight: 550;
+  text-shadow: 0 0 1px #1e1e1e;
+  letter-spacing: 0.5px;
 }
 
 /* Class for paper and platen */ 
