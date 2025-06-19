@@ -8,8 +8,7 @@ export default function Typewriter() {
   const [carriageOffset, setCarriageOffset] = useState(0); // horizontal shift
   const [paperOffset, setPaperOffset] = useState(0);       // vertical shift
 
-  const mirrorRef = useRef(null);
-  const textareaRef = useRef(null);
+  const editorRef = useRef(null);
 
   return (
     <div className="typewriter-container">
@@ -18,8 +17,7 @@ export default function Typewriter() {
         setText={setText}  
         setCarriageOffset={setCarriageOffset}
         setPaperOffset={setPaperOffset}
-        mirrorRef={mirrorRef}
-        textareaRef={textareaRef}
+        editorRef={editorRef}
       />
       <TypewriterSounds text={text} />
       <ParchmentEditor 
@@ -27,8 +25,7 @@ export default function Typewriter() {
         setText={setText} 
         carriageOffset={carriageOffset}
         paperOffset={paperOffset}
-        mirrorRef={mirrorRef}
-        textareaRef={textareaRef}
+        editorRef={editorRef}
       />
     </div>
   );

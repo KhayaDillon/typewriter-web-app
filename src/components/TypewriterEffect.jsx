@@ -2,30 +2,27 @@ import { useEffect, useRef } from "react";
 
 export default function TypewriterEffect({
   text,
-  setText,
   setCarriageOffset,
   setPaperOffset,
-  mirrorRef,
-  textareaRef,
+  editorRef, // now points to the contentEditable div
 }) {
-
   const offset = useRef(0);
-
   const prevLength = useRef(0);
   const prevText = useRef("");
   const prevLines = useRef(1);
   const prevNewlineCount = useRef(0);
-  
   const justWrapped = useRef(false);
   const didMount = useRef(false);
 
   useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    const lineHeight = 16 * 1.5; // sync with CSS
+
     if (!didMount.current) {
-      const mirrorHeight = mirrorRef.current?.offsetHeight ?? 0;
-      const lineHeight = 16 * 1.5;
-      const initialLineCount = Math.ceil(mirrorHeight / lineHeight);
-      console.log(initialLineCount)
-      prevLines.current = initialLineCount; // 🛡️ Set actual baseline
+      const initialLineCount = Math.ceil(editor.offsetHeight / lineHeight);
+      prevLines.current = initialLineCount;
       prevLength.current = text.length;
       prevText.current = text;
       didMount.current = true;
@@ -33,7 +30,7 @@ export default function TypewriterEffect({
     }
 
     const lengthDiff = text.length - prevLength.current;
-  
+
     const isNewLineAdded =
       text.length > prevText.current.length &&
       text[text.length - 1] === "\n";
@@ -43,12 +40,10 @@ export default function TypewriterEffect({
       prevText.current.endsWith("\n") &&
       !text.endsWith("\n");
 
-    const mirrorHeight = mirrorRef.current?.offsetHeight ?? 0;
-    const lineHeight = 16 * 1.5; // match font-size * line-height
-    const currentLineCount = Math.ceil(mirrorHeight / lineHeight);
+    const currentLineCount = Math.ceil(editor.offsetHeight / lineHeight);
     const currentNewlineCount = (text.match(/\n/g) || []).length;
 
-    // Handle autowrap
+    // Autowrap detection
     if (currentLineCount > prevLines.current && prevLength.current > 0) {
       justWrapped.current = true;
       offset.current = 0;
@@ -56,7 +51,7 @@ export default function TypewriterEffect({
       setPaperOffset((prev) => prev + 20);
     }
 
-    // Handle typing
+    // Typing (not due to wrapping)
     if (lengthDiff > 0) {
       if (justWrapped.current) {
         justWrapped.current = false;
@@ -64,32 +59,27 @@ export default function TypewriterEffect({
         offset.current = Math.min(500, offset.current + 5);
         setCarriageOffset(offset.current);
 
-        // Trigger paper stamp effect
-        if (textareaRef?.current) {
-          const el = textareaRef.current;
-          el.classList.remove("stamp-effect");
-          void el.offsetWidth; // force reflow
-          el.classList.add("stamp-effect");
-        }
+        // Trigger stamp animation
+        editor.classList.remove("stamp-effect");
+        void editor.offsetWidth; // force reflow
+        editor.classList.add("stamp-effect");
       }
     }
-  
-    // Handle backspace
+
+    // Backspace
     if (lengthDiff < 0) {
-      // Move left when backspacing 
       offset.current = Math.max(0, offset.current - 5);
       setCarriageOffset(offset.current);
     }
-    
 
-    // Handle manual newline (Enter), only if not from wrapping
+    // Manual newline (Enter)
     if (isNewLineAdded && !justWrapped.current) {
       offset.current = 0;
       setCarriageOffset(0);
       setPaperOffset((prev) => prev + 20);
     }
 
-    // Handle removed newline
+    // Removed newline
     if (isNewLineRemoved || currentNewlineCount < prevNewlineCount.current) {
       setPaperOffset((prev) => Math.max(0, prev - 30));
     }
@@ -99,8 +89,7 @@ export default function TypewriterEffect({
     prevLines.current = currentLineCount;
     prevLength.current = text.length;
     prevText.current = text;
-  }, [text]);
-  
+  }, [text, editorRef, setCarriageOffset, setPaperOffset]);
 
-  return null; // No UI, logic only
+  return null;
 }
