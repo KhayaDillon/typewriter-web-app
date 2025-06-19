@@ -34,6 +34,41 @@ export default function ParchmentEditor({
     e.preventDefault();
 
     if (e.key === "Backspace") {
+      const selection = window.getSelection();
+      if (!selection || !selection.rangeCount) return;
+    
+      const range = selection.getRangeAt(0);
+      const container = editorRef.current;
+    
+      if (!container.contains(range.startContainer) || !container.contains(range.endContainer)) {
+        return; // Selection is outside the editable area
+      }
+    
+      // Check if it's a selection (not just a caret)
+      if (!range.collapsed) {
+        const allSpans = [...container.querySelectorAll("span[data-index]")];
+    
+        // Collect indexes within selection
+        const selectedIndexes = allSpans.filter((span) => {
+          const spanRange = document.createRange();
+          spanRange.selectNodeContents(span);
+          return (
+            range.compareBoundaryPoints(Range.END_TO_START, spanRange) < 0 &&
+            range.compareBoundaryPoints(Range.START_TO_END, spanRange) > 0
+          );
+        }).map((span) => Number(span.dataset.index));
+    
+        if (selectedIndexes.length > 0) {
+          const start = Math.min(...selectedIndexes);
+          const end = Math.max(...selectedIndexes) + 1;
+    
+          setText(text.slice(0, start) + text.slice(end));
+          setCaretIndex(start);
+          return;
+        }
+      }
+    
+      // Fallback: single char delete
       if (caretIndex > 0) {
         setText(text.slice(0, caretIndex - 1) + text.slice(caretIndex));
         setCaretIndex(caretIndex - 1);

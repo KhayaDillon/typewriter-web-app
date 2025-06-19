@@ -30,7 +30,7 @@ export default function TypewriterEffect({
     }
 
     const lengthDiff = text.length - prevLength.current;
-
+    
     const isNewLineAdded =
       text.length > prevText.current.length &&
       text[text.length - 1] === "\n";
@@ -40,8 +40,27 @@ export default function TypewriterEffect({
       prevText.current.endsWith("\n") &&
       !text.endsWith("\n");
 
-    const currentLineCount = Math.ceil(editor.offsetHeight / lineHeight);
+    const getLineCount = (container) => {
+      const range = document.createRange();
+      const lines = new Set();
+    
+      container.childNodes.forEach((node) => {
+        if (node.nodeType === 1 || node.nodeType === 3) {
+          range.selectNodeContents(node);
+          const rects = range.getClientRects();
+          for (let rect of rects) {
+            lines.add(rect.top); // each distinct `top` value = a new line
+          }
+        }
+      });
+    
+      return lines.size;
+    };
+
+    const currentLineCount = getLineCount(editor);
     const currentNewlineCount = (text.match(/\n/g) || []).length;
+    console.log("Height:", editor.offsetHeight, "Lines:", currentLineCount);
+
 
     // Autowrap detection
     if (currentLineCount > prevLines.current && prevLength.current > 0) {

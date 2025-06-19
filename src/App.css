@@ -77,7 +77,7 @@
   animation: popChar 0.12s ease-out;
 }
 
-.selected-char {
+.parchment-textarea ::selection {
   background-color: #fffacd; /* pale yellow for a "whited out" look */
   color: transparent;
   text-shadow: 0 0 0 #3b2f2f; /* keeps text visible under transparent */
