@@ -32,58 +32,64 @@ export default function ParchmentEditor({
   // ⌨️ Handle key presses manually
   const handleKeyDown = (e) => {
     e.preventDefault();
-
-    if (e.key === "Backspace") {
-      const selection = window.getSelection();
-      if (!selection || !selection.rangeCount) return;
-    
-      const range = selection.getRangeAt(0);
-      const container = editorRef.current;
-    
-      if (!container.contains(range.startContainer) || !container.contains(range.endContainer)) {
-        return; // Selection is outside the editable area
-      }
-    
-      // Check if it's a selection (not just a caret)
+  
+    const selection = window.getSelection();
+    const container = editorRef.current;
+    if (!selection || !selection.rangeCount || !container) return;
+  
+    const range = selection.getRangeAt(0);
+  
+    // 🧼 Selection delete with whiteout animation
+    if (e.key === "Backspace" || e.key === "Delete") {
       if (!range.collapsed) {
-        const allSpans = [...container.querySelectorAll("span[data-index]")];
+        const container = editorRef.current;
+        const selectedSpans = [
+          ...container.querySelectorAll(".whiteout-selection"),
+        ];
     
-        // Collect indexes within selection
-        const selectedIndexes = allSpans.filter((span) => {
-          const spanRange = document.createRange();
-          spanRange.selectNodeContents(span);
-          return (
-            range.compareBoundaryPoints(Range.END_TO_START, spanRange) < 0 &&
-            range.compareBoundaryPoints(Range.START_TO_END, spanRange) > 0
-          );
-        }).map((span) => Number(span.dataset.index));
+  
+        if (selectedSpans.length > 0) {
+          // Now apply whiteout-deletion after a short pause
+          setTimeout(() => {
+            selectedSpans.forEach((span) => {
+              span.classList.add("whiteout-deleting");
+            });
     
-        if (selectedIndexes.length > 0) {
-          const start = Math.min(...selectedIndexes);
-          const end = Math.max(...selectedIndexes) + 1;
+            setTimeout(() => {
+              const indexes = selectedSpans.map((s) => Number(s.dataset.index));
+              const start = Math.min(...indexes);
+              const end = Math.max(...indexes) + 1;
+              const newText = text.slice(0, start) + text.slice(end);
+              setText(newText);
+              setCaretIndex(start);
+            }, 600); // let deletion animation play
+          }, 50);
     
-          setText(text.slice(0, start) + text.slice(end));
-          setCaretIndex(start);
           return;
         }
       }
-    
-      // Fallback: single char delete
+  
+      // 🧱 Fallback: delete previous character
       if (caretIndex > 0) {
         setText(text.slice(0, caretIndex - 1) + text.slice(caretIndex));
         setCaretIndex(caretIndex - 1);
       }
-    } else if (e.key === "ArrowLeft") {
+    }
+  
+    // ➡️⬅️ Caret movement
+    else if (e.key === "ArrowLeft") {
       setCaretIndex(Math.max(0, caretIndex - 1));
     } else if (e.key === "ArrowRight") {
       setCaretIndex(Math.min(text.length, caretIndex + 1));
-    } else if (e.key.length === 1) {
-      // Typeable character
-      insertCharAtCaret(e.key);
-    } else if (e.key === "Enter") {
-      insertCharAtCaret("\n");
+    }
+  
+    // ⌨️ Character input (including Enter)
+    else if (e.key.length === 1 || e.key === "Enter") {
+      const charToInsert = e.key === "Enter" ? "\n" : e.key;
+      insertCharAtCaret(charToInsert);
     }
   };
+  
 
   // 🎯 Manually position the visual caret after updates
   const setCaretManually = () => {
@@ -111,7 +117,33 @@ export default function ParchmentEditor({
   // 🔁 Update caret position visually whenever text or caretIndex changes
   useEffect(() => {
     setCaretManually();
-  }, [text, caretIndex]);
+
+    const handleSelectionChange = () => {
+      const selection = window.getSelection();
+      const container = editorRef.current;
+      if (!selection || !container || !selection.rangeCount) return;
+  
+      const range = selection.getRangeAt(0);
+  
+      // Clear all previous selection classes
+      container.querySelectorAll(".whiteout-selection").forEach((el) => {
+        el.classList.remove("whiteout-selection");
+      });
+  
+      // Apply whiteout-selection class to intersecting spans
+      const spans = container.querySelectorAll("span[data-index]");
+      spans.forEach((span) => {
+        if (range.intersectsNode(span)) {
+          span.classList.add("whiteout-selection");
+        }
+      });
+    };
+
+    document.addEventListener("selectionchange", handleSelectionChange);
+    return () => {
+      document.removeEventListener("selectionchange", handleSelectionChange);
+    };
+  }, [text, caretIndex, editorRef]);
 
   // 🖋️ Render each character as a span for animation + caret targeting
   const renderTextWithAnimation = (text) => {
@@ -133,6 +165,7 @@ export default function ParchmentEditor({
     });
   };
 
+ 
   // 🧱 UI structure with background, editor, and typewriter
   return (
     <div className="parchment-container">

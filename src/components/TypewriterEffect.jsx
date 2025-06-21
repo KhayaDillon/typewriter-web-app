@@ -1,15 +1,18 @@
 import { useEffect, useRef } from "react";
 
+const MIN_CHARS_BEFORE_WRAP = 70;
+
 export default function TypewriterEffect({
   text,
   setCarriageOffset,
   setPaperOffset,
-  editorRef, // now points to the contentEditable div
+  editorRef,
 }) {
   const offset = useRef(0);
   const prevLength = useRef(0);
   const prevText = useRef("");
-  const prevLines = useRef(1);
+  const prevTop = useRef(null);
+  const logicalLineCount = useRef(1);
   const prevNewlineCount = useRef(0);
   const justWrapped = useRef(false);
   const didMount = useRef(false);
@@ -18,11 +21,16 @@ export default function TypewriterEffect({
     const editor = editorRef.current;
     if (!editor) return;
 
-    const lineHeight = 16 * 1.5; // sync with CSS
+    const spans = editor.querySelectorAll("span[data-index]");
+    const lastSpan = spans[spans.length - 1];
+    const editorTop = editor.getBoundingClientRect().top;
+    const currentTop = lastSpan ? lastSpan.getBoundingClientRect().top - editorTop : null;
+    const lastTop = prevTop.current;
+
+    let lineChanged = false;
 
     if (!didMount.current) {
-      const initialLineCount = Math.ceil(editor.offsetHeight / lineHeight);
-      prevLines.current = initialLineCount;
+      prevTop.current = currentTop;
       prevLength.current = text.length;
       prevText.current = text;
       didMount.current = true;
@@ -30,7 +38,16 @@ export default function TypewriterEffect({
     }
 
     const lengthDiff = text.length - prevLength.current;
-    
+    const currentNewlineCount = (text.match(/\n/g) || []).length;
+
+    if (
+      currentTop !== null &&
+      lastTop !== null &&
+      Math.abs(currentTop - lastTop) > 5
+    ) {
+      lineChanged = true;
+    }
+
     const isNewLineAdded =
       text.length > prevText.current.length &&
       text[text.length - 1] === "\n";
@@ -40,34 +57,20 @@ export default function TypewriterEffect({
       prevText.current.endsWith("\n") &&
       !text.endsWith("\n");
 
-    const getLineCount = (container) => {
-      const range = document.createRange();
-      const lines = new Set();
-    
-      container.childNodes.forEach((node) => {
-        if (node.nodeType === 1 || node.nodeType === 3) {
-          range.selectNodeContents(node);
-          const rects = range.getClientRects();
-          for (let rect of rects) {
-            lines.add(rect.top); // each distinct `top` value = a new line
-          }
-        }
-      });
-    
-      return lines.size;
-    };
+    // Log visual line info
+    console.log(
+      `Top: ${currentTop} | PrevTop: ${lastTop} | Visual Line Changed: ${lineChanged} | Manual Newlines: ${currentNewlineCount} | Estimated Total Lines: ${
+        logicalLineCount.current + (lineChanged ? 1 : 0) + currentNewlineCount
+      }`
+    );
 
-    const currentLineCount = getLineCount(editor);
-    const currentNewlineCount = (text.match(/\n/g) || []).length;
-    console.log("Height:", editor.offsetHeight, "Lines:", currentLineCount);
-
-
-    // Autowrap detection
-    if (currentLineCount > prevLines.current && prevLength.current > 0) {
+    // Autowrap
+    if (lineChanged && prevLength.current > MIN_CHARS_BEFORE_WRAP) {
       justWrapped.current = true;
       offset.current = 0;
       setCarriageOffset(0);
-      setPaperOffset((prev) => prev + 20);
+      setPaperOffset(prev => prev + 20);
+      logicalLineCount.current += 1;
     }
 
     // Typing (not due to wrapping)
@@ -80,7 +83,7 @@ export default function TypewriterEffect({
 
         // Trigger stamp animation
         editor.classList.remove("stamp-effect");
-        void editor.offsetWidth; // force reflow
+        void editor.offsetWidth;
         editor.classList.add("stamp-effect");
       }
     }
@@ -95,19 +98,21 @@ export default function TypewriterEffect({
     if (isNewLineAdded && !justWrapped.current) {
       offset.current = 0;
       setCarriageOffset(0);
-      setPaperOffset((prev) => prev + 20);
+      setPaperOffset(prev => prev + 20);
+      logicalLineCount.current += 1;
     }
 
     // Removed newline
     if (isNewLineRemoved || currentNewlineCount < prevNewlineCount.current) {
-      setPaperOffset((prev) => Math.max(0, prev - 30));
+      setPaperOffset(prev => Math.max(0, prev - 30));
+      logicalLineCount.current = Math.max(1, logicalLineCount.current - 1);
     }
 
     // Save state
-    prevNewlineCount.current = currentNewlineCount;
-    prevLines.current = currentLineCount;
+    prevTop.current = currentTop;
     prevLength.current = text.length;
     prevText.current = text;
+    prevNewlineCount.current = currentNewlineCount;
   }, [text, editorRef, setCarriageOffset, setPaperOffset]);
 
   return null;

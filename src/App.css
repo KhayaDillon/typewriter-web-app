@@ -42,7 +42,7 @@
   font-weight: 550;
   text-shadow: 0 0 1px #1e1e1e;
   letter-spacing: 0.5px;
-  caret-color: black;
+  caret-color: #3b2f2f;
   overflow: hidden;
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -77,10 +77,48 @@
   animation: popChar 0.12s ease-out;
 }
 
+/* Custom white-out selection styling using spans (not ::selection) */
+.whiteout-selection {
+  box-shadow: inset 2px 0 5px 2px #fefcec;
+  filter: blur(0.5px);
+  opacity: 0.9;
+  transition: box-shadow 0.6s ease-out, filter 0.6s ease-out, opacity 0.6s ease-out;
+}
+
+/* Animation for deletion "white-out + fade away" effect */
+.whiteout-deleting {
+  box-shadow: inset 2px 0 5px 2px #fefcec;
+  filter: blur(1px);
+  opacity: 1;
+  animation: whiteout-fade 1s forwards;
+}
+
+@keyframes whiteout-fade {
+  0% {
+    background-color: #fefcec;
+    box-shadow: inset 2px 0 5px 2px #fefcec;
+    color: #3b2f2f;
+    filter: blur(0.5px);
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    color: transparent;
+    filter: blur(1.5px);
+    transform: scale(1.05);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: inset 0 0 0 0 transparent;
+    filter: blur(2px);
+    transform: scale(0.9);
+    opacity: 0;
+  }
+}
+
+/* Ensure your existing animated-char and base styles remain unchanged */
 .parchment-textarea ::selection {
-  background-color: #fffacd; /* pale yellow for a "whited out" look */
-  color: transparent;
-  text-shadow: 0 0 0 #3b2f2f; /* keeps text visible under transparent */
+  background-color: transparent; /* disable default selection coloring */
 }
 
 /* Class for paper and platen */ 
