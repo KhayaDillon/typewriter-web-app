@@ -5,6 +5,7 @@ const MIN_CHARS_BEFORE_WRAP = 60;
 export default function useLineTracking({
   text,
   offsetRef,
+  setCarriageOffset, 
   setPaperOffset,
   editorRef,
   justWrappedRef,
@@ -65,14 +66,16 @@ export default function useLineTracking({
     // Autowrap
     if (lineChanged && prevLength.current > MIN_CHARS_BEFORE_WRAP) {
       justWrappedRef.current = true;
-      offsetRef.current = 0;
+      offsetRef.current = 500;
+      setCarriageOffset(offsetRef.current);
       setPaperOffset(prev => prev + 20);
       logicalLineCount.current += 1;
     }
 
     // Manual newline (Enter)
     if (isNewLineAdded && !justWrappedRef.current) {
-      offsetRef.current = 0;
+      offsetRef.current = 500;
+      setCarriageOffset(offsetRef.current);
       setPaperOffset(prev => prev + 20);
       logicalLineCount.current += 1;
     }

@@ -6,15 +6,15 @@ export default function TypewriterEffect({
   text, 
   setCarriageOffset, 
   setPaperOffset, 
-  editorRef 
+  editorRef,
+  offsetRef, 
 }) {
 
   const justWrappedRef = useRef(false);
   const lineTrackingDidMountRef = useRef(false);
   const typingDidMountRef = useRef(false);
-  const offsetRef = useRef(0);
 
-  useLineTracking({ text, editorRef, justWrappedRef, offsetRef, setPaperOffset, didMountRef: lineTrackingDidMountRef });
+  useLineTracking({ text, editorRef, justWrappedRef, offsetRef, setCarriageOffset, setPaperOffset, didMountRef: lineTrackingDidMountRef });
   useTypingAnimations({ text, editorRef, justWrappedRef, offsetRef, setCarriageOffset, didMountRef: typingDidMountRef });
 
   return null;

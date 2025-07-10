@@ -28,7 +28,7 @@ export default function useTypingAnimations({
       if (justWrappedRef.current) {
         justWrappedRef.current = false;
       } else {
-        offsetRef.current = Math.min(500, offsetRef.current + 5);
+        offsetRef.current = Math.max(-500, offsetRef.current - 14);
         setCarriageOffset(offsetRef.current);
 
         // Trigger stamp animation
@@ -40,9 +40,11 @@ export default function useTypingAnimations({
 
     // Backspace
     if (lengthDiff < 0) {
-      offsetRef.current = Math.max(0, offsetRef.current - 5);
+      offsetRef.current = Math.min(500, offsetRef.current + 14);
       setCarriageOffset(offsetRef.current);
     }
+
+    console.log("offsetRef.current:", offsetRef.current)
 
     // Save state
     prevLength.current = text.length;

@@ -2,22 +2,40 @@ import { useState, useEffect } from "react";
 import parchmentImg from "../assets/parchment.png";
 import platenImg from "../assets/platen.png";
 import typewriterImg from "../assets/typewriter.png";
+import useTypewriterSounds from "../hooks/useTypewriterSounds";
 import "../App.css";
 
 export default function ParchmentEditor({
   text,            
   setText,         
-  carriageOffset,  
+  carriageOffset,
+  setCarriageOffset,  
   paperOffset,     
   editorRef,       // Ref to access the editable div
+  offsetRef,       // Ref to track carriage offset for animations
 }) {
   const [caretIndex, setCaretIndex] = useState(0); // Tracks where new characters are inserted
-  const initialOffset = 750; // Baseline paper position before it moves
+  const [carriageStarted, setCarriageStarted] = useState(false);
+  const {
+    playKeySound,
+    playReturnSound,
+    playSpacebarSound,
+  } = useTypewriterSounds();
+  const INITIAL_OFFSET = 750; // Baseline paper position before it moves
+  const MAX_CARRIAGE_OFFSET = 500;
 
   // 🔎 Focus editor when paper is clicked
   const handleClick = () => {
     if (editorRef.current) {
       editorRef.current.focus();
+  
+      // ⏩ On first focus, move carriage to far right
+      if (!carriageStarted) {
+        offsetRef.current = MAX_CARRIAGE_OFFSET;
+        setCarriageOffset(MAX_CARRIAGE_OFFSET);
+        setCarriageStarted(true);
+        playReturnSound(); // 📣 Play sound on first focus
+      }
     }
   };
 
@@ -32,6 +50,8 @@ export default function ParchmentEditor({
   // ⌨️ Handle key presses manually
   const handleKeyDown = (e) => {
     e.preventDefault();
+
+    if (!carriageStarted) return;
   
     const selection = window.getSelection();
     const container = editorRef.current;
@@ -88,6 +108,15 @@ export default function ParchmentEditor({
       const charToInsert = e.key === "Enter" ? "\n" : e.key;
       insertCharAtCaret(charToInsert);
     }
+
+    // 🔊 Play corresponding sound
+    if (e.key === " ") {
+      playSpacebarSound();
+    } else if (e.key === "Enter") {
+      playReturnSound();
+    } else {
+      playKeySound();
+    }
   };
   
 
@@ -116,6 +145,8 @@ export default function ParchmentEditor({
 
   // 🔁 Update caret position visually whenever text or caretIndex changes
   useEffect(() => {
+    if (!carriageStarted) return;
+
     setCaretManually();
 
     const handleSelectionChange = () => {
@@ -179,7 +210,7 @@ export default function ParchmentEditor({
             className="parchment-paper"
             style={{
               backgroundImage: `url(${parchmentImg})`,
-              transform: `translateY(calc(${initialOffset}px - ${paperOffset}px))`,
+              transform: `translateY(calc(${INITIAL_OFFSET}px - ${paperOffset}px))`,
             }}
             onClick={handleClick}
             tabIndex="0"
