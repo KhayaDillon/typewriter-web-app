@@ -2,16 +2,17 @@ import { useEffect, useRef } from "react";
 import key1 from "../assets/key1.mp3";
 import key2 from "../assets/key2.mp3";
 import key3 from "../assets/key3.mp3";
-import returnSoundSrc from "../assets/return.mp3";
+import returnSoundSrc from "../assets/return.wav";
 import spacebarSoundSrc from "../assets/spacebar.mp3";
 
-export default function useTypewriterSounds() {
-    console.log("Hook path check", key1);
+export default function useTypewriterSounds(currentOffset) {
 
   const keySounds = useRef([]);
   const returnSound = useRef(null);
   const spacebarSound = useRef(null);
   const currentKeyIndex = useRef(0);
+
+  const CARRIAGE_TRANSFORM_DURATION = 0.4; // seconds
 
   useEffect(() => {
     keySounds.current = [new Audio(key1), new Audio(key2), new Audio(key3)];
@@ -36,7 +37,18 @@ export default function useTypewriterSounds() {
     if (sound) playSound({ current: sound });
   };
 
-  const playReturnSound = () => playSound(returnSound);
+  const playReturnSoundBasedOnOffset = (currentOffset) => {
+    const audio = returnSound.current.cloneNode();
+    audio.currentTime = 0;
+    audio.play();
+  
+    setTimeout(() => {
+      audio.pause();
+      audio.currentTime = 0;
+    }, CARRIAGE_TRANSFORM_DURATION * 1000); // Convert to ms
+  };
+
+  const playReturnSound = () => playReturnSoundBasedOnOffset(currentOffset);
   const playSpacebarSound = () => playSound(spacebarSound);
 
   return {

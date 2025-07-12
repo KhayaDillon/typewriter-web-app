@@ -10,6 +10,7 @@ export default function useLineTracking({
   editorRef,
   justWrappedRef,
   didMountRef,
+  playReturnSound, 
 }) {
   const prevLength = useRef(0);
   const prevText = useRef("");
@@ -70,6 +71,7 @@ export default function useLineTracking({
       setCarriageOffset(offsetRef.current);
       setPaperOffset(prev => prev + 20);
       logicalLineCount.current += 1;
+      playReturnSound();
     }
 
     // Manual newline (Enter)
@@ -78,6 +80,7 @@ export default function useLineTracking({
       setCarriageOffset(offsetRef.current);
       setPaperOffset(prev => prev + 20);
       logicalLineCount.current += 1;
+      playReturnSound();
     }
 
     // Removed newline

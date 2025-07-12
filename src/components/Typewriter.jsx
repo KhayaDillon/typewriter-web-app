@@ -1,5 +1,4 @@
 import { useState, useRef } from "react";
-import TypewriterEffect from "./TypewriterEffect";
 import ParchmentEditor from "./ParchmentEditor";
 
 export default function Typewriter() {
@@ -12,19 +11,13 @@ export default function Typewriter() {
 
   return (
     <div className="typewriter-container">
-      <TypewriterEffect 
-        text={text}  
-        setCarriageOffset={setCarriageOffset}
-        setPaperOffset={setPaperOffset}
-        editorRef={editorRef}
-        offsetRef={offsetRef}
-      />
       <ParchmentEditor 
         text={text} 
         setText={setText} 
         carriageOffset={carriageOffset}
         setCarriageOffset={setCarriageOffset}
         paperOffset={paperOffset}
+        setPaperOffset={setPaperOffset}
         editorRef={editorRef}
         offsetRef={offsetRef}
       />

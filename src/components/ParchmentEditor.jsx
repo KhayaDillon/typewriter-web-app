@@ -1,28 +1,57 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import parchmentImg from "../assets/parchment.png";
 import platenImg from "../assets/platen.png";
 import typewriterImg from "../assets/typewriter.png";
-import useTypewriterSounds from "../hooks/useTypewriterSounds";
 import "../App.css";
+
+import useTypewriterSounds from "../hooks/useTypewriterSounds";
+import useLineTracking from "../hooks/useLineTracking";
+import useTypingAnimations from "../hooks/useTypingAnimations";
+
 
 export default function ParchmentEditor({
   text,            
   setText,         
   carriageOffset,
   setCarriageOffset,  
-  paperOffset,     
+  paperOffset,    
+  setPaperOffset,  
   editorRef,       // Ref to access the editable div
   offsetRef,       // Ref to track carriage offset for animations
 }) {
+
+  const INITIAL_OFFSET = 750; // Baseline paper position before it moves
+  const MAX_CARRIAGE_OFFSET = 500;
+
   const [caretIndex, setCaretIndex] = useState(0); // Tracks where new characters are inserted
   const [carriageStarted, setCarriageStarted] = useState(false);
   const {
     playKeySound,
     playReturnSound,
     playSpacebarSound,
-  } = useTypewriterSounds();
-  const INITIAL_OFFSET = 750; // Baseline paper position before it moves
-  const MAX_CARRIAGE_OFFSET = 500;
+  } = useTypewriterSounds(offsetRef.current);
+    const justWrappedRef = useRef(false);
+    const lineTrackingDidMountRef = useRef(false);
+    const typingDidMountRef = useRef(false);
+
+  useLineTracking({ 
+    text, 
+    editorRef, 
+    justWrappedRef, 
+    offsetRef, 
+    setCarriageOffset, 
+    setPaperOffset, 
+    didMountRef: lineTrackingDidMountRef, 
+    playReturnSound, 
+  });
+  useTypingAnimations({ 
+    text, 
+    editorRef, 
+    justWrappedRef, 
+    offsetRef, 
+    setCarriageOffset, 
+    didMountRef: typingDidMountRef 
+  });
 
   // 🔎 Focus editor when paper is clicked
   const handleClick = () => {
@@ -47,34 +76,43 @@ export default function ParchmentEditor({
     setCaretIndex(caretIndex + 1);              // Move caret forward
   };
 
+  const isValidTypingKey = (event) => {
+    const { key, ctrlKey, altKey, metaKey } = event;
+  
+    // Block modifier combos (e.g., Ctrl+C, Alt+Tab)
+    if (ctrlKey || altKey || metaKey) return false;
+  
+    // Block keys like Shift, CapsLock, etc.
+    if (key.length > 1) return false;
+  
+    // Allow printable characters (letters, numbers, symbols)
+    return true;
+  };
+
   // ⌨️ Handle key presses manually
   const handleKeyDown = (e) => {
     e.preventDefault();
-
     if (!carriageStarted) return;
   
+    const key = e.key;
     const selection = window.getSelection();
     const container = editorRef.current;
     if (!selection || !selection.rangeCount || !container) return;
   
     const range = selection.getRangeAt(0);
   
-    // 🧼 Selection delete with whiteout animation
-    if (e.key === "Backspace" || e.key === "Delete") {
+    // 🧼 Selection deletion
+    if (key === "Backspace" || key === "Delete") {
       if (!range.collapsed) {
-        const container = editorRef.current;
         const selectedSpans = [
           ...container.querySelectorAll(".whiteout-selection"),
         ];
-    
-  
         if (selectedSpans.length > 0) {
-          // Now apply whiteout-deletion after a short pause
           setTimeout(() => {
-            selectedSpans.forEach((span) => {
-              span.classList.add("whiteout-deleting");
-            });
-    
+            selectedSpans.forEach((span) =>
+              span.classList.add("whiteout-deleting")
+            );
+  
             setTimeout(() => {
               const indexes = selectedSpans.map((s) => Number(s.dataset.index));
               const start = Math.min(...indexes);
@@ -82,42 +120,52 @@ export default function ParchmentEditor({
               const newText = text.slice(0, start) + text.slice(end);
               setText(newText);
               setCaretIndex(start);
-            }, 600); // let deletion animation play
+            }, 600);
           }, 50);
-    
           return;
         }
       }
   
-      // 🧱 Fallback: delete previous character
       if (caretIndex > 0) {
         setText(text.slice(0, caretIndex - 1) + text.slice(caretIndex));
         setCaretIndex(caretIndex - 1);
       }
-    }
   
-    // ➡️⬅️ Caret movement
-    else if (e.key === "ArrowLeft") {
-      setCaretIndex(Math.max(0, caretIndex - 1));
-    } else if (e.key === "ArrowRight") {
-      setCaretIndex(Math.min(text.length, caretIndex + 1));
-    }
-  
-    // ⌨️ Character input (including Enter)
-    else if (e.key.length === 1 || e.key === "Enter") {
-      const charToInsert = e.key === "Enter" ? "\n" : e.key;
-      insertCharAtCaret(charToInsert);
-    }
-
-    // 🔊 Play corresponding sound
-    if (e.key === " ") {
-      playSpacebarSound();
-    } else if (e.key === "Enter") {
-      playReturnSound();
-    } else {
       playKeySound();
+      return;
     }
+  
+    // ⬅️➡️ Arrows
+    if (key === "ArrowLeft") {
+      setCaretIndex(Math.max(0, caretIndex - 1));
+      return;
+    } else if (key === "ArrowRight") {
+      setCaretIndex(Math.min(text.length, caretIndex + 1));
+      return;
+    }
+  
+    // ⏎ Enter key
+    if (key === "Enter") {
+      insertCharAtCaret("\n");
+      playReturnSound();
+      return;
+    }
+  
+    // ␣ Spacebar
+    if (key === " " || key === "Spacebar") {
+      insertCharAtCaret(" ");
+      playSpacebarSound();
+      return;
+    }
+  
+    // 🛑 Filter out non-printable
+    if (!isValidTypingKey(e)) return;
+  
+    // ✅ Default key: printable char
+    insertCharAtCaret(key);
+    playKeySound();
   };
+  
   
 
   // 🎯 Manually position the visual caret after updates
