@@ -8,6 +8,10 @@ export default function useTypingAnimations({
   editorRef,
   didMountRef
 }) {
+
+  const MAX_CARRIAGE_OFFSET = 500;
+  const MIN_CARRIAGE_OFFSET = -500;
+
   const prevLength = useRef(0);
 
   useEffect(() => {
@@ -28,19 +32,19 @@ export default function useTypingAnimations({
       if (justWrappedRef.current) {
         justWrappedRef.current = false;
       } else {
-        offsetRef.current = Math.max(-500, offsetRef.current - 14);
+        offsetRef.current = Math.max(MIN_CARRIAGE_OFFSET, offsetRef.current - 14);
         setCarriageOffset(offsetRef.current);
 
         // Trigger stamp animation
         editor.classList.remove("stamp-effect");
-        void editor.offsetRefWidth;
+        void editor.offsetWidth; // Forces a reflow
         editor.classList.add("stamp-effect");
       }
     }
 
     // Backspace
     if (lengthDiff < 0) {
-      offsetRef.current = Math.min(500, offsetRef.current + 14);
+      offsetRef.current = Math.min(MAX_CARRIAGE_OFFSET, offsetRef.current + 14);
       setCarriageOffset(offsetRef.current);
     }
 

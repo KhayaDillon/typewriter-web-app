@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import parchmentImg from "../assets/parchment.png";
 import platenImg from "../assets/platen.png";
 import typewriterImg from "../assets/typewriter.png";
@@ -20,8 +20,8 @@ export default function ParchmentEditor({
   offsetRef,       // Ref to track carriage offset for animations
 }) {
 
-  const INITIAL_OFFSET = 750; // Baseline paper position before it moves
-  const MAX_CARRIAGE_OFFSET = 500;
+  const MAX_PAPER_OFFSET = 750; // Baseline paper position before it moves
+  const maxOffsetRef = useRef(359); // Max offset calculated on mount (initially placeholder)
 
   const [caretIndex, setCaretIndex] = useState(0); // Tracks where new characters are inserted
   const [carriageStarted, setCarriageStarted] = useState(false);
@@ -30,9 +30,10 @@ export default function ParchmentEditor({
     playReturnSound,
     playSpacebarSound,
   } = useTypewriterSounds(offsetRef.current);
-    const justWrappedRef = useRef(false);
-    const lineTrackingDidMountRef = useRef(false);
-    const typingDidMountRef = useRef(false);
+  const justWrappedRef = useRef(false);
+  const lineTrackingDidMountRef = useRef(false);
+  const typingDidMountRef = useRef(false);
+  
 
   useLineTracking({ 
     text, 
@@ -60,8 +61,8 @@ export default function ParchmentEditor({
   
       // ⏩ On first focus, move carriage to far right
       if (!carriageStarted) {
-        offsetRef.current = MAX_CARRIAGE_OFFSET;
-        setCarriageOffset(MAX_CARRIAGE_OFFSET);
+        offsetRef.current = maxOffsetRef.current;
+        setCarriageOffset(offsetRef.current);
         setCarriageStarted(true);
         playReturnSound(); // 📣 Play sound on first focus
       }
@@ -191,11 +192,52 @@ export default function ParchmentEditor({
     selection.addRange(range); // Apply caret range
   };
 
-  // 🔁 Update caret position visually whenever text or caretIndex changes
+
+  function getCaretPixelPosition() {
+    if (!editorRef.current) return 0;
+  
+    const editorRect = editorRef.current.getBoundingClientRect();
+    const caretSpan = editorRef.current.querySelector(`[class=" animated-char"]`);
+    console.log("Caret span found:", caretSpan);
+
+    if (!caretSpan) return 0; // caret at the end or not rendered yet
+    
+    const caretRect = caretSpan.getBoundingClientRect();
+  
+    return caretRect.left - editorRect.left;
+  }
+
+  function calculateCarriageOffset() {
+    const caretPos = getCaretPixelPosition();
+    const maxOffset = maxOffsetRef.current;
+    const offset = maxOffset - caretPos;
+  
+    console.log("CaretPos:", caretPos, "MaxOffset:", maxOffset, "Offset:", offset);
+    return offset;
+  }
+
+
+  useLayoutEffect(() => {
+    const target = document.querySelector("#type-lever-target");
+    const editor = editorRef.current;
+    if (!target || !editor) return;
+  
+    const targetLeft = target.getBoundingClientRect().left;
+    const editorLeft = editor.getBoundingClientRect().left;
+  
+    maxOffsetRef.current = targetLeft - editorLeft;
+  
+    console.log("Initial maxOffset calculated:", maxOffsetRef.current);
+  }, []);
+
+
   useEffect(() => {
     if (!carriageStarted) return;
 
     setCaretManually();
+
+    const newOffset = calculateCarriageOffset();
+    offsetRef.current = newOffset;
 
     const handleSelectionChange = () => {
       const selection = window.getSelection();
@@ -222,7 +264,7 @@ export default function ParchmentEditor({
     return () => {
       document.removeEventListener("selectionchange", handleSelectionChange);
     };
-  }, [text, caretIndex, editorRef]);
+  }, [text, caretIndex, editorRef, carriageStarted]);
 
   // 🖋️ Render each character as a span for animation + caret targeting
   const renderTextWithAnimation = (text) => {
@@ -250,7 +292,7 @@ export default function ParchmentEditor({
     <div className="parchment-container">
       <div className="typewriter-stack">
         <div
-          className="paper-track"
+          className="carriage-and-paper"
           style={{ transform: `translateX(calc(-50% + ${carriageOffset}px))` }}
         >
           <img src={platenImg} alt="Platen Roller" className="platen-image" />
@@ -258,7 +300,7 @@ export default function ParchmentEditor({
             className="parchment-paper"
             style={{
               backgroundImage: `url(${parchmentImg})`,
-              transform: `translateY(calc(${INITIAL_OFFSET}px - ${paperOffset}px))`,
+              transform: `translateY(calc(${MAX_PAPER_OFFSET}px - ${paperOffset}px))`,
             }}
             onClick={handleClick}
             tabIndex="0"
@@ -278,6 +320,7 @@ export default function ParchmentEditor({
             </div>
           </div>
         </div>
+        <div id="type-lever-target" />
         <img src={typewriterImg} alt="Typewriter" className="typewriter-image" />
       </div>
     </div>

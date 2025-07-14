@@ -121,8 +121,18 @@
   background-color: transparent; /* disable default selection coloring */
 }
 
+/* Typewriter Layering Stack */
+.typewriter-stack {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end; /* keep typewriter at the bottom */
+  height: 100%;
+}
+
 /* Class for paper and platen */ 
-.paper-track {
+.carriage-and-paper {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -140,14 +150,15 @@
   pointer-events: none; /* Prevent it from blocking textarea clicks */
 }
 
-/* Typewriter Layering Stack */
-.typewriter-stack {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end; /* keep typewriter at the bottom */
-  height: 100%;
+#type-lever-target {
+  position: absolute;
+  bottom: 350px; /* Adjust this value until it hovers above the typewriter exactly */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 1px;
+  z-index: 10;
+  pointer-events: none;
 }
 
 /* Typewriter image */
@@ -155,5 +166,14 @@
   width: 1440px; /* Was 1200px; matches +20% proportion */
   z-index: 3;
   position: relative;
-  transform: translateY(-24px); /* Was -20px; scale accordingly */
+  transform: translateY(-24px); 
+}
+
+/* Debugging */
+#type-lever-target {
+  background-color: red;
+  border-radius: 50%;
+}
+[data-index='0'] {
+  outline: 1px dashed lime;
 }
