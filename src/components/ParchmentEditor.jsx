@@ -1,12 +1,12 @@
-import { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import parchmentImg from "../assets/parchment.png";
 import platenImg from "../assets/platen.png";
 import typewriterImg from "../assets/typewriter.png";
 import "../App.css";
 
 import useTypewriterSounds from "../hooks/useTypewriterSounds";
-import useLineTracking from "../hooks/useLineTracking";
-import useTypingAnimations from "../hooks/useTypingAnimations";
+import usePaperAnimation from "../hooks/usePaperAnimation";
+import useCarriageAnimation from "../hooks/useCarriageAnimation";
 
 
 export default function ParchmentEditor({
@@ -30,26 +30,25 @@ export default function ParchmentEditor({
     playReturnSound,
     playSpacebarSound,
   } = useTypewriterSounds(offsetRef.current);
-  const justWrappedRef = useRef(false);
   const lineTrackingDidMountRef = useRef(false);
   const typingDidMountRef = useRef(false);
   
 
-  useLineTracking({ 
+  usePaperAnimation({ 
     text, 
     editorRef, 
-    justWrappedRef, 
     offsetRef, 
+    maxOffsetRef,
     setCarriageOffset, 
     setPaperOffset, 
     didMountRef: lineTrackingDidMountRef, 
     playReturnSound, 
   });
-  useTypingAnimations({ 
+  useCarriageAnimation({ 
     text, 
     editorRef, 
-    justWrappedRef, 
     offsetRef, 
+    maxOffsetRef,
     setCarriageOffset, 
     didMountRef: typingDidMountRef 
   });
@@ -166,8 +165,6 @@ export default function ParchmentEditor({
     insertCharAtCaret(key);
     playKeySound();
   };
-  
-  
 
   // 🎯 Manually position the visual caret after updates
   const setCaretManually = () => {
@@ -192,52 +189,32 @@ export default function ParchmentEditor({
     selection.addRange(range); // Apply caret range
   };
 
+  // 🖋️ Render each character as a span for animation + caret targeting
+  const renderTextWithAnimation = (text) => {
+    return [...text].map((char, i) => {
+      const isLast = i === caretIndex - 1;
 
-  function getCaretPixelPosition() {
-    if (!editorRef.current) return 0;
-  
-    const editorRect = editorRef.current.getBoundingClientRect();
-    const caretSpan = editorRef.current.querySelector(`[class=" animated-char"]`);
-    console.log("Caret span found:", caretSpan);
+      let className = "";
+      if (isLast) className += " animated-char";
 
-    if (!caretSpan) return 0; // caret at the end or not rendered yet
-    
-    const caretRect = caretSpan.getBoundingClientRect();
-  
-    return caretRect.left - editorRect.left;
-  }
+      return (
+        <span
+          key={i}
+          data-index={i}
+          className={className || undefined}
+        >
+          {char === "\n" ? <br /> : char}
+        </span>
+      );
+    });
+  };
 
-  function calculateCarriageOffset() {
-    const caretPos = getCaretPixelPosition();
-    const maxOffset = maxOffsetRef.current;
-    const offset = maxOffset - caretPos;
-  
-    console.log("CaretPos:", caretPos, "MaxOffset:", maxOffset, "Offset:", offset);
-    return offset;
-  }
-
-
-  useLayoutEffect(() => {
-    const target = document.querySelector("#type-lever-target");
-    const editor = editorRef.current;
-    if (!target || !editor) return;
-  
-    const targetLeft = target.getBoundingClientRect().left;
-    const editorLeft = editor.getBoundingClientRect().left;
-  
-    maxOffsetRef.current = targetLeft - editorLeft;
-  
-    console.log("Initial maxOffset calculated:", maxOffsetRef.current);
-  }, []);
-
+  console.log("PaperOffset:", paperOffset, "CarriageOffset:", carriageOffset, "CaretIndex:", caretIndex, "TextLength:", text.length);
 
   useEffect(() => {
     if (!carriageStarted) return;
 
     setCaretManually();
-
-    const newOffset = calculateCarriageOffset();
-    offsetRef.current = newOffset;
 
     const handleSelectionChange = () => {
       const selection = window.getSelection();
@@ -265,26 +242,6 @@ export default function ParchmentEditor({
       document.removeEventListener("selectionchange", handleSelectionChange);
     };
   }, [text, caretIndex, editorRef, carriageStarted]);
-
-  // 🖋️ Render each character as a span for animation + caret targeting
-  const renderTextWithAnimation = (text) => {
-    return [...text].map((char, i) => {
-      const isLast = i === caretIndex - 1;
-
-      let className = "";
-      if (isLast) className += " animated-char";
-
-      return (
-        <span
-          key={i}
-          data-index={i}
-          className={className || undefined}
-        >
-          {char === "\n" ? <br /> : char}
-        </span>
-      );
-    });
-  };
 
  
   // 🧱 UI structure with background, editor, and typewriter

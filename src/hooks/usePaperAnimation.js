@@ -1,18 +1,15 @@
 import { useEffect, useRef } from "react";
 
-const MIN_CHARS_BEFORE_WRAP = 60;
-
-export default function useLineTracking({
+export default function usePaperAnimation({
   text,
   offsetRef,
+  maxOffsetRef,
   setCarriageOffset, 
   setPaperOffset,
   editorRef,
-  justWrappedRef,
   didMountRef,
   playReturnSound, 
 }) {
-  const prevLength = useRef(0);
   const prevText = useRef("");
   const prevTop = useRef(null);
   const logicalLineCount = useRef(1);
@@ -31,6 +28,8 @@ export default function useLineTracking({
 
     const lineChanged = currentTop !== null && lastTop !== null && Math.abs(currentTop - lastTop) > 5;
 
+    console.log("DetectLineChange: lastTop =", lastTop, "currentTop =", currentTop, "lineChanged =", lineChanged, "textLength =", text.length);
+
     return { lineChanged, currentTop };
   };
 
@@ -39,7 +38,6 @@ export default function useLineTracking({
     
     if (!didMountRef.current) {
       prevTop.current = detectLineChange().currentTop;
-      prevLength.current = text.length;
       prevText.current = text;
       didMountRef.current = true;
       return;
@@ -48,35 +46,14 @@ export default function useLineTracking({
     const { lineChanged, currentTop } = detectLineChange();
     const currentNewlineCount = (text.match(/\n/g) || []).length;
 
-    const isNewLineAdded =
-      text.length > prevText.current.length &&
-      text[text.length - 1] === "\n";
-
     const isNewLineRemoved =
       text.length < prevText.current.length &&
       prevText.current.endsWith("\n") &&
       !text.endsWith("\n");
 
-    // Log visual line info
-    console.log(
-      `Top: ${currentTop} | PrevTop: ${lastTop} | Visual Line Changed: ${lineChanged} | Manual Newlines: ${currentNewlineCount} | Estimated Total Lines: ${
-        logicalLineCount.current + (lineChanged ? 1 : 0) + currentNewlineCount
-      }`
-    );
-
-    // Autowrap
-    if (lineChanged && prevLength.current > MIN_CHARS_BEFORE_WRAP) {
-      justWrappedRef.current = true;
-      offsetRef.current = 500;
-      setCarriageOffset(offsetRef.current);
-      setPaperOffset(prev => prev + 20);
-      logicalLineCount.current += 1;
-      playReturnSound();
-    }
-
-    // Manual newline (Enter)
-    if (isNewLineAdded && !justWrappedRef.current) {
-      offsetRef.current = 500;
+    // Autowrap or New Line Added
+    if (lineChanged) {
+      offsetRef.current = maxOffsetRef.current;
       setCarriageOffset(offsetRef.current);
       setPaperOffset(prev => prev + 20);
       logicalLineCount.current += 1;
@@ -91,8 +68,7 @@ export default function useLineTracking({
 
     // Save state
     prevTop.current = currentTop;
-    prevLength.current = text.length;
     prevText.current = text;
     prevNewlineCount.current = currentNewlineCount;
-  }, [text, editorRef, setPaperOffset]);
+  }, [text, editorRef, setPaperOffset, setCarriageOffset]);
 }

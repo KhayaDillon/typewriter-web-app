@@ -169,11 +169,3 @@
   transform: translateY(-24px); 
 }
 
-/* Debugging */
-#type-lever-target {
-  background-color: red;
-  border-radius: 50%;
-}
-[data-index='0'] {
-  outline: 1px dashed lime;
-}
