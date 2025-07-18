@@ -9,36 +9,32 @@ import usePaperAnimation from "../hooks/usePaperAnimation";
 import useCarriageAnimation from "../hooks/useCarriageAnimation";
 
 
-export default function ParchmentEditor({
-  text,            
-  setText,         
-  carriageOffset,
-  setCarriageOffset,  
-  paperOffset,    
-  setPaperOffset,  
-  editorRef,       // Ref to access the editable div
-  offsetRef,       // Ref to track carriage offset for animations
-}) {
+export default function ParchmentEditor() {
+  const offsetRefs = { 
+    carriageOffset: useRef(0),
+    paperOffset: useRef(0),
+    maxCarriageOffset: useRef(359), // Max offset calculated on mount (initially placeholder)
+    maxPaperOffset: useRef(792),    // Max paper offset (initially placeholder)
+  };
+  const editorRef = useRef(null);
+  const lineTrackingDidMountRef = useRef(false);
+  const typingDidMountRef = useRef(false);
 
-  const MAX_PAPER_OFFSET = 750; // Baseline paper position before it moves
-  const maxOffsetRef = useRef(359); // Max offset calculated on mount (initially placeholder)
-
+  const [text, setText] = useState("");
+  const [carriageOffset, setCarriageOffset] = useState(0); // horizontal shift
+  const [paperOffset, setPaperOffset] = useState(0);       // vertical shift
   const [caretIndex, setCaretIndex] = useState(0); // Tracks where new characters are inserted
   const [carriageStarted, setCarriageStarted] = useState(false);
   const {
     playKeySound,
     playReturnSound,
     playSpacebarSound,
-  } = useTypewriterSounds(offsetRef.current);
-  const lineTrackingDidMountRef = useRef(false);
-  const typingDidMountRef = useRef(false);
-  
+  } = useTypewriterSounds();
 
   usePaperAnimation({ 
     text, 
     editorRef, 
-    offsetRef, 
-    maxOffsetRef,
+    offsetRefs,
     setCarriageOffset, 
     setPaperOffset, 
     didMountRef: lineTrackingDidMountRef, 
@@ -47,8 +43,7 @@ export default function ParchmentEditor({
   useCarriageAnimation({ 
     text, 
     editorRef, 
-    offsetRef, 
-    maxOffsetRef,
+    offsetRefs, 
     setCarriageOffset, 
     didMountRef: typingDidMountRef 
   });
@@ -60,8 +55,8 @@ export default function ParchmentEditor({
   
       // ⏩ On first focus, move carriage to far right
       if (!carriageStarted) {
-        offsetRef.current = maxOffsetRef.current;
-        setCarriageOffset(offsetRef.current);
+        offsetRefs.carriageOffset.current = offsetRefs.maxCarriageOffset.current;
+        setCarriageOffset(offsetRefs.carriageOffset.current);
         setCarriageStarted(true);
         playReturnSound(); // 📣 Play sound on first focus
       }
@@ -209,7 +204,7 @@ export default function ParchmentEditor({
     });
   };
 
-  console.log("PaperOffset:", paperOffset, "CarriageOffset:", carriageOffset, "CaretIndex:", caretIndex, "TextLength:", text.length);
+  //console.log("PaperOffset:", paperOffset, "CarriageOffset:", carriageOffset, "CaretIndex:", caretIndex, "TextLength:", text.length);
 
   useEffect(() => {
     if (!carriageStarted) return;
@@ -257,7 +252,7 @@ export default function ParchmentEditor({
             className="parchment-paper"
             style={{
               backgroundImage: `url(${parchmentImg})`,
-              transform: `translateY(calc(${MAX_PAPER_OFFSET}px - ${paperOffset}px))`,
+              transform: `translateY(calc(${paperOffset}px))`,
             }}
             onClick={handleClick}
             tabIndex="0"

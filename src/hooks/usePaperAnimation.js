@@ -1,9 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useLayoutEffect } from "react";
 
 export default function usePaperAnimation({
   text,
-  offsetRef,
-  maxOffsetRef,
+  offsetRefs,
   setCarriageOffset, 
   setPaperOffset,
   editorRef,
@@ -14,11 +13,41 @@ export default function usePaperAnimation({
   const prevTop = useRef(null);
   const logicalLineCount = useRef(1);
   const prevNewlineCount = useRef(0);
-
+  const {
+    carriageOffset,
+    paperOffset,
+    maxCarriageOffset,
+    maxPaperOffset,
+  } = offsetRefs;
+  const editor = editorRef.current;
   const lastTop = prevTop.current;
+  
+
+  function getCaretPixelPosition() {
+    if (!editor) return 0;
+  
+    const editorRect = editor.getBoundingClientRect();
+    const caretSpan = editor.querySelector(`[class=" animated-char"]`);
+
+    if (!caretSpan) return 0; // caret at the end or not rendered yet
+    
+    const caretRect = caretSpan.getBoundingClientRect();
+
+    console.log("CaretRect:", caretRect.top, "EditorRect:", editorRect.top);
+    return caretRect.top - editorRect.top;
+  }
+
+  function calculatePaperOffset() {
+    const caretPos = getCaretPixelPosition();
+    const maxOffset = maxPaperOffset.current;
+    const offset = maxOffset - caretPos;
+  
+    console.log("CaretPos:", caretPos, "MaxOffset:", maxOffset, "Offset:", offset);
+    return offset;
+  }
+
 
   const detectLineChange = () => {
-    const editor = editorRef.current;
     if (!editor) return { lineChanged: false, currentTop: null };
 
     const spans = editor.querySelectorAll("span[data-index]");
@@ -34,7 +63,7 @@ export default function usePaperAnimation({
   };
 
   useEffect(() => {
-    if (!editorRef.current) return;
+    if (!editor) return;
     
     if (!didMountRef.current) {
       prevTop.current = detectLineChange().currentTop;
@@ -53,16 +82,18 @@ export default function usePaperAnimation({
 
     // Autowrap or New Line Added
     if (lineChanged) {
-      offsetRef.current = maxOffsetRef.current;
-      setCarriageOffset(offsetRef.current);
-      setPaperOffset(prev => prev + 20);
+      carriageOffset.current = maxCarriageOffset.current;
+      setCarriageOffset(carriageOffset.current);
+      paperOffset.current = calculatePaperOffset()
+      setPaperOffset(paperOffset.current);
       logicalLineCount.current += 1;
       playReturnSound();
     }
 
     // Removed newline
     if (isNewLineRemoved || currentNewlineCount < prevNewlineCount.current) {
-      setPaperOffset(prev => Math.max(0, prev - 30));
+      paperOffset.current = calculatePaperOffset()
+      setPaperOffset(paperOffset.current);
       logicalLineCount.current = Math.max(1, logicalLineCount.current - 1);
     }
 
@@ -71,4 +102,28 @@ export default function usePaperAnimation({
     prevText.current = text;
     prevNewlineCount.current = currentNewlineCount;
   }, [text, editorRef, setPaperOffset, setCarriageOffset]);
+
+  useLayoutEffect(() => {
+    const target = document.querySelector("#type-lever-target");
+    const editor = editorRef.current;
+
+    if (!target || !editor) return;
+
+    const raf = requestAnimationFrame(() => {
+      const targetTop = target.getBoundingClientRect().top;
+      const editorTop = editor.getBoundingClientRect().top;
+      const measuredOffset = targetTop - editorTop;
+
+      // Avoid overriding if measured offset is suspiciously small
+      if (measuredOffset > 100) {
+        maxPaperOffset.current = measuredOffset;
+        setPaperOffset(measuredOffset);
+        console.log("✅ MaxPaperOffset initialized to", measuredOffset);
+      } else {
+        console.warn("⚠️ Skipped maxPaperOffset update: measured value looked off", measuredOffset);
+      }
+    });
+
+    return () => cancelAnimationFrame(raf);
+  }, [setPaperOffset, editorRef]);
 }

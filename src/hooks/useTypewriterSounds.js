@@ -5,7 +5,7 @@ import key3 from "../assets/key3.mp3";
 import returnSoundSrc from "../assets/return.wav";
 import spacebarSoundSrc from "../assets/spacebar.mp3";
 
-export default function useTypewriterSounds(currentOffset) {
+export default function useTypewriterSounds() {
 
   const keySounds = useRef([]);
   const returnSound = useRef(null);
@@ -37,7 +37,7 @@ export default function useTypewriterSounds(currentOffset) {
     if (sound) playSound({ current: sound });
   };
 
-  const playReturnSoundBasedOnOffset = (currentOffset) => {
+  const playReturnSoundBasedOnOffset = () => {
     const audio = returnSound.current.cloneNode();
     audio.currentTime = 0;
     audio.play();
@@ -48,7 +48,7 @@ export default function useTypewriterSounds(currentOffset) {
     }, CARRIAGE_TRANSFORM_DURATION * 1000); // Convert to ms
   };
 
-  const playReturnSound = () => playReturnSoundBasedOnOffset(currentOffset);
+  const playReturnSound = () => playReturnSoundBasedOnOffset();
   const playSpacebarSound = () => playSound(spacebarSound);
 
   return {

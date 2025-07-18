@@ -138,7 +138,7 @@
   align-items: center;
   position: absolute;
   left: 50%;
-  bottom: 140px; /* Adjust this until the paper sits correctly above the typewriter */
+  bottom: 60px; /* Adjust this until the paper sits correctly above the typewriter */
   transition: transform 0.4s cubic-bezier(0.33, 1, 0.68, 1);
 }
 
@@ -152,9 +152,8 @@
 
 #type-lever-target {
   position: absolute;
-  bottom: 350px; /* Adjust this value until it hovers above the typewriter exactly */
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(-240px);
   width: 1px;
   height: 1px;
   z-index: 10;

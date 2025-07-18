@@ -2,12 +2,17 @@ import { useEffect, useRef, useLayoutEffect } from "react";
 
 export default function useCarriageAnimation({
   text,
-  offsetRef,
-  maxOffsetRef,
+  offsetRefs,
   setCarriageOffset,
   editorRef,
 }) {
 
+  const {
+    carriageOffset,
+    paperOffset,
+    maxCarriageOffset,
+    maxPaperOffset,
+  } = offsetRefs;
   const editor = editorRef.current;
 
   function getCaretPixelPosition() {
@@ -25,18 +30,18 @@ export default function useCarriageAnimation({
 
   function calculateCarriageOffset() {
     const caretPos = getCaretPixelPosition();
-    const maxOffset = maxOffsetRef.current;
+    const maxOffset = maxCarriageOffset.current;
     const offset = maxOffset - caretPos;
   
-    console.log("CaretPos:", caretPos, "MaxOffset:", maxOffset, "Offset:", offset);
+    //console.log("CaretPos:", caretPos, "MaxOffset:", maxOffset, "Offset:", offset);
     return offset;
   }
 
   useEffect(() => {
     if (!editor) return;
 
-    offsetRef.current = calculateCarriageOffset();
-    setCarriageOffset(offsetRef.current);
+    carriageOffset.current = calculateCarriageOffset();
+    setCarriageOffset(carriageOffset.current);
 
     // Trigger stamp animation
     editor.classList.remove("stamp-effect");
@@ -51,9 +56,7 @@ export default function useCarriageAnimation({
   
     const targetLeft = target.getBoundingClientRect().left;
     const editorLeft = editor.getBoundingClientRect().left;
-  
-    maxOffsetRef.current = targetLeft - editorLeft;
-  
-    console.log("Initial maxOffset calculated:", maxOffsetRef.current);
+
+    maxCarriageOffset.current = targetLeft - editorLeft;
   }, []);
 }
