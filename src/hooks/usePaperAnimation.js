@@ -5,6 +5,7 @@ export default function usePaperAnimation({
   offsetRefs,
   setCarriageOffset, 
   setPaperOffset,
+  onReady,
   editorRef,
   didMountRef,
   playReturnSound, 
@@ -114,16 +115,17 @@ export default function usePaperAnimation({
       const editorTop = editor.getBoundingClientRect().top;
       const measuredOffset = targetTop - editorTop;
 
-      // Avoid overriding if measured offset is suspiciously small
       if (measuredOffset > 100) {
         maxPaperOffset.current = measuredOffset;
         setPaperOffset(measuredOffset);
         console.log("✅ MaxPaperOffset initialized to", measuredOffset);
+
+        onReady?.(); // Notify App it's safe to reveal
       } else {
         console.warn("⚠️ Skipped maxPaperOffset update: measured value looked off", measuredOffset);
       }
     });
 
     return () => cancelAnimationFrame(raf);
-  }, [setPaperOffset, editorRef]);
+  }, [editorRef, setPaperOffset, onReady]);
 }

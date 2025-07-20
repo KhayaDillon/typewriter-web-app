@@ -9,8 +9,8 @@ import usePaperAnimation from "../hooks/usePaperAnimation";
 import useCarriageAnimation from "../hooks/useCarriageAnimation";
 
 
-export default function ParchmentEditor() {
-  const offsetRefs = { 
+export default function ParchmentEditor({ onLayoutReady }) {
+  const offsetRefs = {
     carriageOffset: useRef(0),
     paperOffset: useRef(0),
     maxCarriageOffset: useRef(359), // Max offset calculated on mount (initially placeholder)
@@ -37,6 +37,7 @@ export default function ParchmentEditor() {
     offsetRefs,
     setCarriageOffset, 
     setPaperOffset, 
+    onReady: onLayoutReady,
     didMountRef: lineTrackingDidMountRef, 
     playReturnSound, 
   });

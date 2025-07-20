@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Special+Elite&display=swap');
+
 /* Parchment Editor */
 
 /* Ensure the parent container centers the parchment */
@@ -36,12 +38,12 @@
   resize: none;
   outline: none;
   font-size: 16px;
-  font-family: "Courier", "Courier New", monospace;
+  font-family: 'Special Elite', "Courier", "Courier New", monospace;
   line-height: 1.5;
   color: #3b2f2f;
-  font-weight: 550;
+  opacity: 90%;
   text-shadow: 0 0 1px #1e1e1e;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
   caret-color: #3b2f2f;
   overflow: hidden;
   white-space: pre-wrap;
@@ -166,5 +168,126 @@
   z-index: 3;
   position: relative;
   transform: translateY(-24px); 
+}
+
+/* Splash Screen CSS */
+.splash-screen.parchment {
+  position: fixed;
+  inset: 0;
+  z-index: 9995;
+  background: #fdf5e6 url('/assets/parchment-texture.jpg') center/cover no-repeat;
+  pointer-events: none;
+  transition: filter 2.25s ease, opacity 2.25s ease;
+  will-change: filter, opacity;
+}
+
+.splash-screen.parchment.blur-out {
+  filter: blur(20px);
+  opacity: 0;
+}
+
+/* Title content */
+.splash-text {
+  position: fixed;
+  inset: 0;
+  z-index: 9996;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: 'Special Elite', 'Typewriter', serif;
+  font-size: 3rem;
+  color: #222;
+  pointer-events: none;
+}
+
+/* Optionally fade this too using JS class if needed */
+.splash-text.fade-out {
+  opacity: 0;
+  filter: blur(0px);
+  transform: scale(1);
+  transition:
+    opacity 2.25s ease-in-out,
+    filter 2.25s ease-in-out,
+    transform 2.25s ease-in-out;
+  will-change: opacity, transform, filter;
+}
+
+.splash-title {
+  font-size: 1em;
+  letter-spacing: 0.05em;
+  display: inline-block;
+}
+
+.line {
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 35px solid #222;
+  width: 0ch;
+  max-width: max-content;
+  display: inline-block;
+}
+
+.line-1 {
+  animation: typing 2s steps(11, end) forwards,
+             blinkCaret 0.75s step-end infinite;
+  animation-delay: 0.25s;
+}
+
+.line-2 {
+  animation: typing 2.5s steps(15, end) forwards,
+             blinkCaret 0.75s step-end infinite;
+  animation-delay: 2.3s;
+}
+
+/* Important: delay the caret-blink animation so it waits until line-1 finishes */
+.line-1,
+.line-2 {
+  animation-fill-mode: forwards;
+}
+
+.quiet-type-logo {
+  font-size: 1.8em;
+  font-weight: bold;
+  letter-spacing: 0.08em;
+  color: #111;
+}
+
+.app-content.pull-focus-in {
+  animation: pullFocusIn 2s ease forwards;
+  will-change: filter, transform;
+}
+
+@keyframes typing {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes blinkCaret {
+  0%, 100% {
+    border-color: transparent;
+  }
+  50% {
+    border-color: #222;
+  }
+}
+
+@keyframes pullFocusIn {
+  0% {
+    filter: blur(100px) brightness(2);
+    transform: scale(1.04);
+  }
+  50% {
+    filter: blur(50px) brightness(1.5);
+    transform: scale(1.02);
+  }
+  100% {
+    filter: blur(0px) brightness(1);
+    transform: scale(1);
+  }
 }
 
