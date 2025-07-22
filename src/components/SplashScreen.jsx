@@ -4,6 +4,7 @@ function SplashScreen({ readyToReveal, onFinish, setStartBlurReveal }) {
   const [timeElapsed, setTimeElapsed] = useState(false);
   const [startParchmentFade, setStartParchmentFade] = useState(false);
   const [startTitleFade, setStartTitleFade] = useState(false);
+  const [hideCaret, setHideCaret] = useState(false);
 
   // Ensure minimum time is met
   useEffect(() => {
@@ -11,9 +12,11 @@ function SplashScreen({ readyToReveal, onFinish, setStartBlurReveal }) {
     return () => clearTimeout(minDisplay);
   }, []);
 
-  // When app is ready & time has passed → begin blur reveal
+  // Handle reveal sequence
   useEffect(() => {
-    if (readyToReveal && timeElapsed) {
+    if (timeElapsed && readyToReveal) {
+      // Hide the caret immediately before blur reveal
+      setHideCaret(true);
       setStartBlurReveal(true);
 
       const parchmentTimer = setTimeout(() => {
@@ -24,13 +27,13 @@ function SplashScreen({ readyToReveal, onFinish, setStartBlurReveal }) {
 
           const doneTimer = setTimeout(() => {
             onFinish?.();
-          }, 2300); // allow fade-out to finish
+          }, 2300);
 
           return () => clearTimeout(doneTimer);
-        }, 1000); // title fades out after parchment
+        }, 1000);
 
         return () => clearTimeout(titleTimer);
-      }, 1000); // parchment fades out after blur
+      }, 1000);
 
       return () => clearTimeout(parchmentTimer);
     }
@@ -43,8 +46,14 @@ function SplashScreen({ readyToReveal, onFinish, setStartBlurReveal }) {
       {/* Title and logo */}
       <div className={`splash-text ${startTitleFade ? "fade-out" : ""}`}>
         <div className="splash-title">
-            <span className="line line-1">Welcome to</span> <br/>
-            <span className="line line-2 quiet-type-logo">The Quiet Type</span>
+            <span>Welcome to</span> <br/>
+            <span className="quiet-type-logo">
+                <span className="static-text">The Quiet </span>
+                <span className="type-words-wrapper">
+                    <span className="type-words">Type</span>
+                    <span className={`caret ${hideCaret ? 'caret-hidden' : ''}`} />
+                </span>
+            </span>
         </div>
     </div>
     </>

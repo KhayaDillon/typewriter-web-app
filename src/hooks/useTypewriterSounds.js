@@ -15,9 +15,19 @@ export default function useTypewriterSounds() {
   const CARRIAGE_TRANSFORM_DURATION = 0.4; // seconds
 
   useEffect(() => {
-    keySounds.current = [new Audio(key1), new Audio(key2), new Audio(key3)];
-    returnSound.current = new Audio(returnSoundSrc);
-    spacebarSound.current = new Audio(spacebarSoundSrc);
+    const keyAudio = [new Audio(key1), new Audio(key2), new Audio(key3)];
+    const returnAudio = new Audio(returnSoundSrc);
+    const spaceAudio = new Audio(spacebarSoundSrc);
+
+    // Preload
+    keyAudio.forEach((a) => { a.load(); });
+    returnAudio.load();
+    spaceAudio.load();
+
+    keySounds.current = keyAudio;
+    returnSound.current = returnAudio;
+    spacebarSound.current = spaceAudio;
+    console.log("📦 Loaded returnSound:", returnSound.current.src);
   }, []);
 
   const playSound = (audioRef) => {
@@ -38,14 +48,28 @@ export default function useTypewriterSounds() {
   };
 
   const playReturnSoundBasedOnOffset = () => {
+    if (!returnSound.current) {
+      console.warn("❌ returnSound ref is null!");
+      return;
+    }
+
     const audio = returnSound.current.cloneNode();
+    console.log("🎧 Cloned returnSound:", audio.src);
+
     audio.currentTime = 0;
-    audio.play();
-  
+
+    audio.play()
+      .then(() => {
+        console.log("✅ Return sound played successfully");
+      })
+      .catch((err) => {
+        console.warn("❌ Return sound failed to play:", err);
+      });
+
     setTimeout(() => {
       audio.pause();
       audio.currentTime = 0;
-    }, CARRIAGE_TRANSFORM_DURATION * 1000); // Convert to ms
+    }, CARRIAGE_TRANSFORM_DURATION * 1000);
   };
 
   const playReturnSound = () => playReturnSoundBasedOnOffset();

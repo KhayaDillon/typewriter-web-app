@@ -196,20 +196,19 @@
   justify-content: center;
   text-align: center;
   font-family: 'Special Elite', 'Typewriter', serif;
-  font-size: 3rem;
+  font-size: 3.2rem;
   color: #222;
   pointer-events: none;
 }
 
-/* Optionally fade this too using JS class if needed */
 .splash-text.fade-out {
   opacity: 0;
   filter: blur(0px);
   transform: scale(1);
   transition:
-    opacity 2.25s ease-in-out,
-    filter 2.25s ease-in-out,
-    transform 2.25s ease-in-out;
+    opacity 2.5s ease-in-out,
+    filter 2.5s ease-in-out,
+    transform 2.5s ease-in-out;
   will-change: opacity, transform, filter;
 }
 
@@ -219,39 +218,83 @@
   display: inline-block;
 }
 
-.line {
-  overflow: hidden;
-  white-space: nowrap;
-  border-right: 35px solid #222;
-  width: 0ch;
-  max-width: max-content;
-  display: inline-block;
-}
-
-.line-1 {
-  animation: typing 2s steps(11, end) forwards,
-             blinkCaret 0.75s step-end infinite;
-  animation-delay: 0.25s;
-}
-
-.line-2 {
-  animation: typing 2.5s steps(15, end) forwards,
-             blinkCaret 0.75s step-end infinite;
-  animation-delay: 2.3s;
-}
-
-/* Important: delay the caret-blink animation so it waits until line-1 finishes */
-.line-1,
-.line-2 {
-  animation-fill-mode: forwards;
-}
-
 .quiet-type-logo {
   font-size: 1.8em;
   font-weight: bold;
   letter-spacing: 0.08em;
   color: #111;
+  gap: 0.30em;
+
+  position: relative;
+  display: inline-flex; /* 👈 Flex helps alignment */
+  align-items: baseline; /* 👈 Aligns text and "Type" */
 }
+
+.static-text {
+  display: inline;
+}
+
+.type-words-wrapper {
+  display: inline-block;
+  max-width: 5.5ch; /* Reserve space */
+  position: relative;
+  overflow: hidden; /* 👈 Needed for max-width animation to be visible */
+  line-height: 1; /* Match baseline */
+
+  vertical-align: baseline;
+  position: relative;
+  text-align: left;
+}
+
+.type-words {
+  vertical-align: baseline; /* 🔧 Ensures alignment */
+  line-height: 1; /* Normalize line spacing */
+  display: inline-block;
+  white-space: nowrap;
+  width: 0ch;
+  animation: typing 0.6s steps(4, end) both;
+}
+
+/* The blinking caret */
+.caret {
+  display: inline-block;
+  width: 0.7ch;
+  height: 1.05em;
+  background-color: #222;
+  border-radius: 1px;
+  animation: blinkCaret 1s step-end infinite;
+  align-self: flex-end;
+  border-radius: 1px; /* Subtle roundness */
+  bottom: 0; /* Aligns with the text baseline */
+  vertical-align: -0.2em;
+}
+
+.caret.caret-hidden {
+  background-color: transparent;
+  animation: none; /* Stops blinking */
+}
+
+/* 
+.type-words::after {
+  content: "";
+
+  display: inline-block;
+  vertical-align: bottom;
+  position: absolute;
+  left: auto;
+  right: 0;
+  top: 0;
+  position: relative; 
+
+  width: 0.7ch; 
+  height: 1.05em;  
+  border-radius: 1px; 
+  box-shadow: 0 0 3px #111;
+  background-color: #222;
+
+  animation: blinkCaret 0.75s step-end infinite;
+}
+*/
 
 .app-content.pull-focus-in {
   animation: pullFocusIn 2s ease forwards;
@@ -260,20 +303,21 @@
 
 @keyframes typing {
   from {
-    width: 0;
+    width: 0ch;
   }
   to {
-    width: 100%;
+    width: 4.5ch; /* Total space for “Type” and caret */
   }
 }
 
 @keyframes blinkCaret {
   0%, 100% {
-    border-color: transparent;
+    background-color: #222;
   }
-  50% {
-    border-color: #222;
+  25% {
+    background-color: transparent;
   }
+  
 }
 
 @keyframes pullFocusIn {
