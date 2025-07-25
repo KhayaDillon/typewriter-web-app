@@ -1,23 +1,20 @@
-import { useEffect, useRef, useLayoutEffect } from "react";
+import { useEffect, useRef } from "react";
 
 export default function useCarriageAnimation({
   text,
   offsetRefs,
   setCarriageOffset,
   editorRef,
+  onLayoutReady,
 }) {
 
   const {
     carriageOffset,
-    paperOffset,
     maxCarriageOffset,
-    maxPaperOffset,
   } = offsetRefs;
   const editor = editorRef.current;
 
   function getCaretPixelPosition() {
-    if (!editor) return 0;
-  
     const editorRect = editor.getBoundingClientRect();
     const caretSpan = editor.querySelector(`[class=" animated-char"]`);
 
@@ -38,6 +35,7 @@ export default function useCarriageAnimation({
   }
 
   useEffect(() => {
+    if (!onLayoutReady) return;
     if (!editor) return;
 
     carriageOffset.current = calculateCarriageOffset();
@@ -50,13 +48,4 @@ export default function useCarriageAnimation({
 
   }, [text, editorRef, setCarriageOffset]);
 
-  useLayoutEffect(() => {
-    const target = document.querySelector("#type-lever-target");
-    if (!target || !editor) return;
-  
-    const targetLeft = target.getBoundingClientRect().left;
-    const editorLeft = editor.getBoundingClientRect().left;
-
-    maxCarriageOffset.current = targetLeft - editorLeft;
-  }, []);
 }

@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import Typewriter from "./components/Typewriter";
+import TypewriterDesk from "./components/TypewriterDesk";
 import SplashScreen from "./components/SplashScreen";
 import "./App.css";
 
@@ -19,7 +19,7 @@ function App() {
         />
       )}
       <div className={`app-content ${startBlurReveal ? 'pull-focus-in' : ''}`}>
-        <Typewriter onLayoutReady={() => setReadyToReveal(true)} />
+        <TypewriterDesk onLayoutReady={() => setReadyToReveal(true)} />
       </div>
     </div>
   );

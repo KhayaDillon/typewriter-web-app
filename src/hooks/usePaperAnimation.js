@@ -1,13 +1,12 @@
-import { useEffect, useRef, useLayoutEffect } from "react";
+import { useEffect, useRef } from "react";
 
 export default function usePaperAnimation({
   text,
   offsetRefs,
   setCarriageOffset, 
   setPaperOffset,
-  onReady,
   editorRef,
-  didMountRef,
+  onLayoutReady,
   playReturnSound, 
 }) {
   const prevText = useRef("");
@@ -23,10 +22,7 @@ export default function usePaperAnimation({
   const editor = editorRef.current;
   const lastTop = prevTop.current;
   
-
   function getCaretPixelPosition() {
-    if (!editor) return 0;
-  
     const editorRect = editor.getBoundingClientRect();
     const caretSpan = editor.querySelector(`[class=" animated-char"]`);
 
@@ -47,11 +43,7 @@ export default function usePaperAnimation({
     return offset;
   }
 
-
-  const detectLineChange = () => {
-    if (!editor) return { lineChanged: false, currentTop: null };
-
-    const spans = editor.querySelectorAll("span[data-index]");
+  const detectLineChange = (spans) => {
     const lastSpan = spans[spans.length - 1];
     const editorTop = editor.getBoundingClientRect().top;
     const currentTop = lastSpan ? lastSpan.getBoundingClientRect().top - editorTop : null;
@@ -64,16 +56,11 @@ export default function usePaperAnimation({
   };
 
   useEffect(() => {
+    if (!onLayoutReady) return;
     if (!editor) return;
-    
-    if (!didMountRef.current) {
-      prevTop.current = detectLineChange().currentTop;
-      prevText.current = text;
-      didMountRef.current = true;
-      return;
-    }
 
-    const { lineChanged, currentTop } = detectLineChange();
+    const spans = editor.querySelectorAll("span[data-index]");
+    const { lineChanged, currentTop } = detectLineChange(spans);
     const currentNewlineCount = (text.match(/\n/g) || []).length;
 
     const isNewLineRemoved =
@@ -104,28 +91,4 @@ export default function usePaperAnimation({
     prevNewlineCount.current = currentNewlineCount;
   }, [text, editorRef, setPaperOffset, setCarriageOffset]);
 
-  useLayoutEffect(() => {
-    const target = document.querySelector("#type-lever-target");
-    const editor = editorRef.current;
-
-    if (!target || !editor) return;
-
-    const raf = requestAnimationFrame(() => {
-      const targetTop = target.getBoundingClientRect().top;
-      const editorTop = editor.getBoundingClientRect().top;
-      const measuredOffset = targetTop - editorTop;
-
-      if (measuredOffset > 100) {
-        maxPaperOffset.current = measuredOffset;
-        setPaperOffset(measuredOffset);
-        console.log("✅ MaxPaperOffset initialized to", measuredOffset);
-
-        onReady?.(); // Notify App it's safe to reveal
-      } else {
-        console.warn("⚠️ Skipped maxPaperOffset update: measured value looked off", measuredOffset);
-      }
-    });
-
-    return () => cancelAnimationFrame(raf);
-  }, [editorRef, setPaperOffset, onReady]);
 }

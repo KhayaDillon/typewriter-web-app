@@ -3,7 +3,7 @@
 /* Parchment Editor */
 
 /* Ensure the parent container centers the parchment */
-.parchment-container {
+.desk-container {
   display: flex;
   justify-content: center;
   align-items: start;
