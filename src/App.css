@@ -1,4 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Special+Elite&display=swap');
+
+html.font-loading body {
+  visibility: hidden;
+}
+html.font-ready body {
+  visibility: visible;
+}
 
 /* Parchment Editor */
 
