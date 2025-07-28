@@ -6,7 +6,7 @@ import Carriage from "./Carriage";
 import useAppReadiness from "../hooks/useAppReadiness";
 
 
-export default function Typewriter({ onLayoutReady }) {
+export default function Typewriter({ onLayoutReady, sounds }) {
   const offsetRefs = {
     carriageOffset: useRef(0),
     paperOffset: useRef(0),
@@ -31,6 +31,7 @@ export default function Typewriter({ onLayoutReady }) {
         editorRef={editorRef} 
         paperOffset={paperOffset} 
         setPaperOffset={setPaperOffset} 
+        sounds={sounds}
       />
       <div id="type-lever-target" />
       <img src={typewriterImg} alt="Typewriter" className="typewriter-image" />

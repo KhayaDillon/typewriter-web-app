@@ -1,81 +1,128 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import key1 from "../assets/key1.mp3";
 import key2 from "../assets/key2.mp3";
 import key3 from "../assets/key3.mp3";
-import returnSoundSrc from "../assets/return.wav";
 import spacebarSoundSrc from "../assets/spacebar.mp3";
 
 export default function useTypewriterSounds() {
+  const RETURN_SOUND_URL = "/return_4_sec.wav";
 
-  const keySounds = useRef([]);
-  const returnSound = useRef(null);
-  const spacebarSound = useRef(null);
+  const audioContextRef = useRef(null);
+  const keyBuffers = useRef([]);
+  const returnBuffer = useRef(null);
+  const spacebarBuffer = useRef(null);
   const currentKeyIndex = useRef(0);
+  const hasLoadedSounds = useRef(false);
+  const [soundsReady, setSoundsReady] = useState(false);
 
-  const CARRIAGE_TRANSFORM_DURATION = 0.4; // seconds
+  const loadSound = async (url) => {
+    const response = await fetch(url);
+    const arrayBuffer = await response.arrayBuffer();
+    return await audioContextRef.current.decodeAudioData(arrayBuffer);
+  };
+
+  const prewarmBuffer = (buffer) => {
+    if (!buffer) return;
+    const source = audioContextRef.current.createBufferSource();
+    const gainNode = audioContextRef.current.createGain();
+    gainNode.gain.value = 0;
+    source.buffer = buffer;
+    source.connect(gainNode).connect(audioContextRef.current.destination);
+
+    try {
+      source.start();
+      source.stop(audioContextRef.current.currentTime + 0.01);
+    } catch (err) {
+      console.warn("❌ Error prewarming audio:", err);
+    }
+  };
+
+  const loadAllSounds = async () => {
+    console.log("📦 Starting to load all sounds...");
+    if (hasLoadedSounds.current) return;
+
+    try {
+      const [buf1, buf2, buf3, returnBuf, spaceBuf] = await Promise.all([
+        loadSound(key1),
+        loadSound(key2),
+        loadSound(key3),
+        loadSound(RETURN_SOUND_URL),
+        loadSound(spacebarSoundSrc),
+      ]);
+
+      keyBuffers.current = [buf1, buf2, buf3];
+      returnBuffer.current = returnBuf;
+      spacebarBuffer.current = spaceBuf;
+
+      [buf1, buf2, buf3, returnBuf, spaceBuf].forEach(prewarmBuffer);
+
+      hasLoadedSounds.current = true;
+      setSoundsReady(true);
+      console.log("✅ All sounds loaded and prewarmed.");
+    } catch (err) {
+      console.error("❌ Error loading sounds:", err);
+    }
+  };
+
+  const resumeAudioContext = async () => {
+    console.log("🎯 resumeAudioContext() called");
+    const ctx = audioContextRef.current;
+    if (ctx && ctx.state === "suspended") {
+      try {
+        await ctx.resume();
+        console.log("🔊 AudioContext resumed");
+        await loadAllSounds();
+      } catch (err) {
+        console.warn("⚠️ Failed to resume AudioContext:", err);
+      }
+    } else if (ctx && !hasLoadedSounds.current) {
+      await loadAllSounds();
+    }
+  };
 
   useEffect(() => {
-    const keyAudio = [new Audio(key1), new Audio(key2), new Audio(key3)];
-    const returnAudio = new Audio(returnSoundSrc);
-    const spaceAudio = new Audio(spacebarSoundSrc);
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    audioContextRef.current = audioCtx;
 
-    // Preload
-    keyAudio.forEach((a) => { a.load(); });
-    returnAudio.load();
-    spaceAudio.load();
+    console.log("🔧 AudioContext initialized in suspended state:", audioContextRef.current?.state);
 
-    keySounds.current = keyAudio;
-    returnSound.current = returnAudio;
-    spacebarSound.current = spaceAudio;
-    console.log("📦 Loaded returnSound:", returnSound.current.src);
+    return () => {
+      audioCtx.close();
+    };
   }, []);
 
-  const playSound = (audioRef) => {
-    if (!audioRef.current) return;
-    const clone = audioRef.current.cloneNode();
-    clone.currentTime = 0;
-    clone.play().catch((err) => {
-      // Ignore errors (e.g., autoplay blocked)
-      console.warn("Sound play error:", err);
-    });
+  const playBuffer = (buffer) => {
+    if (!buffer) return;
+    const source = audioContextRef.current.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioContextRef.current.destination);
+    source.start(audioContextRef.current.currentTime);
   };
 
   const playKeySound = () => {
-    const index = currentKeyIndex.current % keySounds.current.length;
-    const sound = keySounds.current[index];
+    const keys = keyBuffers.current;
+    if (keys.length === 0) return;
+    const index = currentKeyIndex.current % keys.length;
+    playBuffer(keys[index]);
     currentKeyIndex.current++;
-    if (sound) playSound({ current: sound });
   };
 
-  const playReturnSoundBasedOnOffset = () => {
-    if (!returnSound.current) {
-      console.warn("❌ returnSound ref is null!");
+  const playReturnSound = () => {
+    console.log("🔁 Playing return sound");
+    if (!returnBuffer.current) {
+      console.warn("🚫 Return buffer is null!");
       return;
     }
-
-    const audio = returnSound.current.cloneNode();
-    console.log("🎧 Cloned returnSound:", audio.src);
-
-    audio.currentTime = 0;
-
-    audio.play()
-      .then(() => {
-        console.log("✅ Return sound played successfully");
-      })
-      .catch((err) => {
-        console.warn("❌ Return sound failed to play:", err);
-      });
-
-    setTimeout(() => {
-      audio.pause();
-      audio.currentTime = 0;
-    }, CARRIAGE_TRANSFORM_DURATION * 1000);
+    playBuffer(returnBuffer.current);
   };
 
-  const playReturnSound = () => playReturnSoundBasedOnOffset();
-  const playSpacebarSound = () => playSound(spacebarSound);
+  const playSpacebarSound = () => {
+    playBuffer(spacebarBuffer.current);
+  };
 
   return {
+    soundsReady,
+    resumeAudioContext, // call this from ParchmentEditor
     playKeySound,
     playReturnSound,
     playSpacebarSound,

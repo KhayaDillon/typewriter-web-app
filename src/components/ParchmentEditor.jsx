@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import parchmentImg from "../assets/parchment.png";
-import useTypewriterSounds from "../hooks/useTypewriterSounds";
 import "../App.css";
 
 export default function ParchmentEditor({ 
@@ -10,28 +9,31 @@ export default function ParchmentEditor({
     offsetRefs, 
     setCarriageOffset,
     paperOffset,
+    sounds
 }) {
   const [caretIndex, setCaretIndex] = useState(0); // Tracks where new characters are inserted
   const [carriageStarted, setCarriageStarted] = useState(false);
+  const editor = editorRef.current;
   const {
     playKeySound,
     playReturnSound,
     playSpacebarSound,
-  } = useTypewriterSounds();
-
-  const editor = editorRef.current;
+    resumeAudioContext,
+  } = sounds;
 
 
   // 🔎 Focus editor when paper is clicked
-  const handleClick = () => {
+  const handleClick = async () => {
     editorRef.current.focus();
 
-    // ⏩ On first focus, move carriage to far right
+    // 🎧 Ensure audio is resumed and sounds are loaded
+    await resumeAudioContext();
+
     if (!carriageStarted) {
-        playReturnSound(); // 📣 Play sound on first focus
-        offsetRefs.carriageOffset.current = offsetRefs.maxCarriageOffset.current;
-        setCarriageOffset(offsetRefs.carriageOffset.current);
-        setCarriageStarted(true);
+      playReturnSound();
+      offsetRefs.carriageOffset.current = offsetRefs.maxCarriageOffset.current;
+      setCarriageOffset(offsetRefs.carriageOffset.current);
+      setCarriageStarted(true);
     }
   };
 

@@ -8,7 +8,7 @@ import usePaperAnimation from "../hooks/usePaperAnimation";
 import useCarriageAnimation from "../hooks/useCarriageAnimation";
 
 
-export default function Carriage({ onLayoutReady, editorRef, paperOffset, setPaperOffset }) {
+export default function Carriage({ onLayoutReady, editorRef, paperOffset, setPaperOffset, sounds }) {
   const offsetRefs = {
     carriageOffset: useRef(0),
     paperOffset: useRef(0),
@@ -53,6 +53,7 @@ export default function Carriage({ onLayoutReady, editorRef, paperOffset, setPap
             setCarriageOffset={setCarriageOffset} 
             paperOffset={paperOffset}
             setPaperOffset={setPaperOffset}
+            sounds={sounds}
         />
     </div>
   );
