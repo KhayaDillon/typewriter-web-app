@@ -1,4 +1,8 @@
 import { useState, useEffect, useRef } from "react";
+import useFloatingToolbar from "../hooks/useFloatingToolbar";
+import useCaretTracking from "../hooks/useCaretTracking";
+import useSelectionHighlight from "../hooks/useSelectionHighlight";
+import FloatingToolbar from "./FloatingToolbar";
 import parchmentImg from "../assets/parchment.png";
 import "../App.css";
 
@@ -11,8 +15,8 @@ export default function ParchmentEditor({
     paperOffset,
     sounds
 }) {
-  const [caretIndex, setCaretIndex] = useState(0); // Tracks where new characters are inserted
   const [carriageStarted, setCarriageStarted] = useState(false);
+  const [justTyped, setJustTyped] = useState(false);
   const editor = editorRef.current;
   const {
     playKeySound,
@@ -20,6 +24,10 @@ export default function ParchmentEditor({
     playSpacebarSound,
     resumeAudioContext,
   } = sounds;
+
+  const { isVisible, position, selectedRange } = useFloatingToolbar(editorRef);
+  const { caretIndex, setCaretIndex, setCaretManually, moveCaret } = useCaretTracking(editorRef, text.length);
+  useSelectionHighlight(editorRef, [text, caretIndex, editorRef, carriageStarted]);
 
 
   // 🔎 Focus editor when paper is clicked
@@ -104,13 +112,8 @@ export default function ParchmentEditor({
     }
   
     // ⬅️➡️ Arrows
-    if (key === "ArrowLeft") {
-      setCaretIndex(Math.max(0, caretIndex - 1));
-      return;
-    } else if (key === "ArrowRight") {
-      setCaretIndex(Math.min(text.length, caretIndex + 1));
-      return;
-    }
+    if (key === "ArrowLeft") return moveCaret("left");
+    if (key === "ArrowRight") return moveCaret("right");
   
     // ⏎ Enter key
     if (key === "Enter") {
@@ -132,34 +135,13 @@ export default function ParchmentEditor({
     // ✅ Default key: printable char
     insertCharAtCaret(key);
     playKeySound();
-  };
-
-  // 🎯 Manually position the visual caret after updates
-  const setCaretManually = () => {
-    const selection = window.getSelection();
-    const range = document.createRange();
-
-    if (caretIndex > text.length) return;
-
-    // Try to find the character span at the caret index
-    const span = editor.querySelector(`[data-index='${caretIndex}']`);
-
-    if (span) {
-      range.setStart(span, 0); // Set caret before the span
-    } else {
-      const last = editor.lastChild;
-      if (last) range.setStartAfter(last); // Place after last char
-    }
-
-    range.collapse(true);
-    selection.removeAllRanges();
-    selection.addRange(range); // Apply caret range
+    setJustTyped(true);
   };
 
   // 🖋️ Render each character as a span for animation + caret targeting
   const renderTextWithAnimation = (text) => {
     return [...text].map((char, i) => {
-      const isLast = i === caretIndex - 1;
+      const isLast = justTyped && i === caretIndex - 1;
 
       let className = "";
       if (isLast) className += " animated-char";
@@ -177,38 +159,18 @@ export default function ParchmentEditor({
   };
 
   //console.log("PaperOffset:", paperOffset, "CarriageOffset:", carriageOffset, "CaretIndex:", caretIndex, "TextLength:", text.length);
+    useEffect(() => {
+        if (!carriageStarted) return;
+        if (!editor) return;
 
-  useEffect(() => {
-    if (!carriageStarted) return;
-    if (!editor) return;
+        setCaretManually();
 
-    setCaretManually();
-
-    const handleSelectionChange = () => {
-      const selection = window.getSelection();
-      if (!selection || !selection.rangeCount) return;
-  
-      const range = selection.getRangeAt(0);
-  
-      // Clear all previous selection classes
-      editor.querySelectorAll(".whiteout-selection").forEach((el) => {
-        el.classList.remove("whiteout-selection");
-      });
-  
-      // Apply whiteout-selection class to intersecting spans
-      const spans = editor.querySelectorAll("span[data-index]");
-      spans.forEach((span) => {
-        if (range.intersectsNode(span)) {
-          span.classList.add("whiteout-selection");
+        if (justTyped) {
+            // Reset flag AFTER animation triggers
+            const timeout = setTimeout(() => setJustTyped(false), 100);
+            return () => clearTimeout(timeout);
         }
-      });
-    };
-
-    document.addEventListener("selectionchange", handleSelectionChange);
-    return () => {
-      document.removeEventListener("selectionchange", handleSelectionChange);
-    };
-  }, [text, caretIndex, editorRef, carriageStarted]);
+    }, [text, caretIndex, editorRef, carriageStarted, justTyped]);
 
  
   // 🧱 UI structure with background, editor, and typewriter
@@ -222,6 +184,15 @@ export default function ParchmentEditor({
         onClick={handleClick}
         tabIndex="0"
     >
+        {isVisible && (
+            <FloatingToolbar
+                position={position}
+                onFormatClick={(command) => {
+                document.execCommand(command, false, null);
+                }}
+            />
+        )}
+
         <div
             ref={editorRef}
             className="parchment-textarea"

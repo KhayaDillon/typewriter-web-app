@@ -44,7 +44,7 @@ html.font-ready body {
   resize: none;
   outline: none;
   font-size: 16px;
-  font-family: 'Special Elite', "Courier", "Courier New", monospace;
+  font-family: "Courier", "Courier New", monospace;
   line-height: 1.5;
   color: #3b2f2f;
   opacity: 90%;
@@ -341,3 +341,34 @@ html.font-ready body {
   }
 }
 
+
+/* components/FloatingToolbar.css */
+
+.floating-toolbar {
+  position: absolute;
+  z-index: 10;
+  display: flex;
+  gap: 6px;
+  background-color: #fefcec;
+  border: 1px solid #e2d4a6;
+  border-radius: 6px;
+  padding: 6px 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transform: translate(-50%, -100%);
+  transition: opacity 0.2s ease-in-out;
+}
+
+.floating-toolbar button {
+  background: none;
+  border: none;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+  color: #4b3d2f;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.floating-toolbar button:hover {
+  background-color: #f0e6c4;
+}

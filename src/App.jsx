@@ -28,13 +28,13 @@ function App() {
 
   return (
     <div className="app">
-      {!splashDone && (
+      {/* !splashDone && (
         <SplashScreen
           readyToReveal={readyToReveal}
           onFinish={() => setSplashDone(true)}
           setStartBlurReveal={setStartBlurReveal}
         />
-      )}
+      ) */}
       <div className={`app-content ${startBlurReveal ? 'pull-focus-in' : ''}`}>
         <TypewriterDesk 
           onLayoutReady={() => setLayoutReady(true)} 
