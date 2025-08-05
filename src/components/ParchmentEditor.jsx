@@ -26,7 +26,7 @@ export default function ParchmentEditor({
   } = sounds;
 
   const { isVisible, position, selectedRange } = useFloatingToolbar(editorRef);
-  const { caretIndex, setCaretIndex, setCaretManually, moveCaret } = useCaretTracking(editorRef, text.length);
+  const { caretIndex, setCaretIndex, setCaretManually, moveCaretHorizontal, moveCaretVertical } = useCaretTracking(editorRef, text.length);
   useSelectionHighlight(editorRef, [text, caretIndex, editorRef, carriageStarted]);
 
 
@@ -112,13 +112,17 @@ export default function ParchmentEditor({
     }
   
     // ⬅️➡️ Arrows
-    if (key === "ArrowLeft") return moveCaret("left");
-    if (key === "ArrowRight") return moveCaret("right");
+    if (key === "ArrowLeft") return moveCaretHorizontal("left");
+    if (key === "ArrowRight") return moveCaretHorizontal("right");
+    if (key === "ArrowUp") return moveCaretVertical("up");
+    if (key === "ArrowDown") return moveCaretVertical("down");
+
   
     // ⏎ Enter key
     if (key === "Enter") {
       insertCharAtCaret("\n");
       playReturnSound();
+      setJustTyped(true); 
       return;
     }
   
@@ -126,6 +130,7 @@ export default function ParchmentEditor({
     if (key === " " || key === "Spacebar") {
       insertCharAtCaret(" ");
       playSpacebarSound();
+      setJustTyped(true); 
       return;
     }
   
@@ -138,6 +143,12 @@ export default function ParchmentEditor({
     setJustTyped(true);
   };
 
+  function getDisplayChar(char) {
+    if (char === " ") return "\u00A0";
+    if (char === "\n") return "\n\u200B";
+    return char;
+  }
+
   // 🖋️ Render each character as a span for animation + caret targeting
   const renderTextWithAnimation = (text) => {
     return [...text].map((char, i) => {
@@ -146,13 +157,15 @@ export default function ParchmentEditor({
       let className = "";
       if (isLast) className += " animated-char";
 
+      const displayChar = getDisplayChar(char);
+
       return (
         <span
           key={i}
           data-index={i}
           className={className || undefined}
         >
-          {char === "\n" ? <br /> : char}
+          {displayChar}
         </span>
       );
     });
