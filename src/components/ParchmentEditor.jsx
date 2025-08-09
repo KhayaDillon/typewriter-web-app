@@ -26,7 +26,9 @@ export default function ParchmentEditor({
   } = sounds;
 
   const { isVisible, position, selectedRange } = useFloatingToolbar(editorRef);
-  const { caretIndex, setCaretIndex, setCaretManually, moveCaretHorizontal, moveCaretVertical } = useCaretTracking(editorRef, text.length);
+  const { caretIndex, setCaretIndex, setCaretManually, moveCaretHorizontal, moveCaretVertical, computeIndexFromSelection } =
+  useCaretTracking(editorRef, text.length);
+
   useSelectionHighlight(editorRef, [text, caretIndex, editorRef, carriageStarted]);
 
 
@@ -47,11 +49,21 @@ export default function ParchmentEditor({
 
   // ⌨️ Insert character into text at caret index
   const insertCharAtCaret = (char) => {
-    const before = text.slice(0, caretIndex);   
-    const after = text.slice(caretIndex);       
-    setText(before + char + after);             // Recombine with inserted character
-    setCaretIndex(caretIndex + 1);              // Move caret forward
+    const indexFromSel = computeIndexFromSelection();
+    const index = typeof indexFromSel === "number" && !isNaN(indexFromSel) 
+      ? indexFromSel 
+      : caretIndex;
+
+    const before = text.slice(0, index);
+    const after = text.slice(index);
+    const newText = before + char + after;
+
+    setText(newText);
+    setCaretIndex(Math.min(index + 1, newText.length)); // ← use newText.length
   };
+
+
+
 
   const isValidTypingKey = (event) => {
     const { key, ctrlKey, altKey, metaKey } = event;
@@ -68,10 +80,18 @@ export default function ParchmentEditor({
 
   // ⌨️ Handle key presses manually
   const handleKeyDown = (e) => {
-    e.preventDefault();
     if (!carriageStarted) return;
   
     const key = e.key;
+
+    // Let browser handle selection keys
+    const isArrowKey = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(key);
+    const isMetaKey = e.ctrlKey || e.metaKey || e.altKey;
+
+    if (!isArrowKey && !isMetaKey) {
+      e.preventDefault(); // Block default typing behavior
+    }
+
     const selection = window.getSelection();
     if (!selection || !selection.rangeCount) return;
   
@@ -153,9 +173,15 @@ export default function ParchmentEditor({
   const renderTextWithAnimation = (text) => {
     return [...text].map((char, i) => {
       const isLast = justTyped && i === caretIndex - 1;
+      //console.log("char:", char, "i:", i, "justTyped:", justTyped, "caretIndex:", caretIndex, "isLast:", isLast);
 
-      let className = "";
-      if (isLast) className += " animated-char";
+      const isAnimatable = char !== "\n";
+      const classList = [];
+
+      if (isLast) {
+        classList.push("carriage-target");
+        if (isAnimatable) classList.push("animated-char");
+      }
 
       const displayChar = getDisplayChar(char);
 
@@ -163,7 +189,8 @@ export default function ParchmentEditor({
         <span
           key={i}
           data-index={i}
-          className={className || undefined}
+          className={[...classList, char === " " ? "fixed-space" : null]
+                      .filter(Boolean).join(" ")}
         >
           {displayChar}
         </span>
@@ -171,14 +198,15 @@ export default function ParchmentEditor({
     });
   };
 
+
   //console.log("PaperOffset:", paperOffset, "CarriageOffset:", carriageOffset, "CaretIndex:", caretIndex, "TextLength:", text.length);
     useEffect(() => {
         if (!carriageStarted) return;
         if (!editor) return;
 
-        setCaretManually();
-
         if (justTyped) {
+          setCaretManually();
+
             // Reset flag AFTER animation triggers
             const timeout = setTimeout(() => setJustTyped(false), 100);
             return () => clearTimeout(timeout);

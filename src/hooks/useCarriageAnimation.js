@@ -16,7 +16,7 @@ export default function useCarriageAnimation({
 
   function getCaretPixelPosition() {
     const editorRect = editor.getBoundingClientRect();
-    const caretSpan = editor.querySelector(`[class=" animated-char"]`);
+    const caretSpan = editor.querySelector(".carriage-target");
 
     if (!caretSpan) return 0; // caret at the end or not rendered yet
     

@@ -24,7 +24,7 @@ export default function usePaperAnimation({
   
   function getCaretPixelPosition() {
     const editorRect = editor.getBoundingClientRect();
-    const caretSpan = editor.querySelector(`[class=" animated-char"]`);
+    const caretSpan = editor.querySelector(".carriage-target");
 
     if (!caretSpan) return 0; // caret at the end or not rendered yet
     
@@ -50,7 +50,7 @@ export default function usePaperAnimation({
 
     const lineChanged = currentTop !== null && lastTop !== null && Math.abs(currentTop - lastTop) > 5;
 
-    console.log("DetectLineChange: lastTop =", lastTop, "currentTop =", currentTop, "lineChanged =", lineChanged, "textLength =", text.length);
+    //console.log("DetectLineChange: lastTop =", lastTop, "currentTop =", currentTop, "lineChanged =", lineChanged, "textLength =", text.length);
 
     return { lineChanged, currentTop };
   };

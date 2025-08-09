@@ -69,20 +69,35 @@ html.font-ready body {
   pointer-events: none;
 }
 
-@keyframes popChar {
+@keyframes fadeIn {
   0% {
-    transform: scale(1.4);
-    opacity: 0.7;
+    transform: scale(2) rotate(20deg);
+    opacity: 0.4;
   }
   100% {
-    transform: scale(1);
+    transform: scale(1) rotate(0deg);
     opacity: 1;
   }
 }
 
 .animated-char {
+  animation: fadeIn 0.12s ease-out forwards;
+}
+
+.fixed-space {
+  width: 0.6ch;
+}
+
+.char-span {
   display: inline-block;
-  animation: popChar 0.12s ease-out;
+  width: 1ch;
+  height: 1em;
+  font-family: "Courier", "Courier New", monospace;
+  font-size: 16px;
+  line-height: 1.5;
+  vertical-align: baseline;
+  white-space: pre;
+  overflow: hidden;
 }
 
 /* Custom white-out selection styling using spans (not ::selection) */
@@ -278,42 +293,6 @@ html.font-ready body {
 .caret.caret-hidden {
   background-color: transparent;
   animation: none; /* Stops blinking */
-}
-
-/* 
-.type-words::after {
-  content: "";
-
-  display: inline-block;
-  vertical-align: bottom;
-  position: absolute;
-  left: auto;
-  right: 0;
-  top: 0;
-  position: relative; 
-
-  width: 0.7ch; 
-  height: 1.05em;  
-  border-radius: 1px; 
-  box-shadow: 0 0 3px #111;
-  background-color: #222;
-
-  animation: blinkCaret 0.75s step-end infinite;
-}
-*/
-
-.app-content.pull-focus-in {
-  animation: pullFocusIn 2s ease forwards;
-  will-change: filter, transform;
-}
-
-@keyframes typing {
-  from {
-    width: 0ch;
-  }
-  to {
-    width: 4.5ch; /* Total space for “Type” and caret */
-  }
 }
 
 @keyframes blinkCaret {
